@@ -299,10 +299,17 @@ export default function DomainList({ user, action }: DomainListProps) {
                             handleChangeStatus(value, "enable_dns", domain)
                           }
                         />
-                        {domain.cf_zone_id &&
+                        {domain.dns_provider_type === "cloudflare" &&
+                          domain.cf_zone_id &&
                           domain.cf_api_key &&
                           domain.cf_email && (
                             <Icons.cloudflare className="mx-0.5 size-4" />
+                          )}
+                        {domain.dns_provider_type === "aliyun" &&
+                          domain.aliyun_access_key_id &&
+                          domain.aliyun_access_key_secret &&
+                          domain.aliyun_domain_name && (
+                            <span className="mx-0.5 text-sm">☁️</span>
                           )}
                       </TableCell>
                       <TableCell className="col-span-1 flex items-center gap-1">

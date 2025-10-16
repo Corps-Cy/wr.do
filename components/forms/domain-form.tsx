@@ -57,7 +57,11 @@ export function DomainForm({
   const [currentEmailStatus, setCurrentEmailStatus] = useState(
     initData?.enable_email || false,
   );
+  const [currentDnsProvider, setCurrentDnsProvider] = useState(
+    initData?.dns_provider_type || "cloudflare",
+  );
   const [isCheckedCfConfig, setIsCheckedCfConfig] = useState(false);
+  const [isCheckedAliyunConfig, setIsCheckedAliyunConfig] = useState(false);
   const [isCheckedResendConfig, setIsCheckedResendConfig] = useState(false);
 
   const {
@@ -74,11 +78,17 @@ export function DomainForm({
       enable_short_link: initData?.enable_short_link || false,
       enable_email: initData?.enable_email || false,
       enable_dns: initData?.enable_dns || false,
+      dns_provider_type: initData?.dns_provider_type || "cloudflare",
       cf_zone_id: initData?.cf_zone_id || "",
       cf_api_key: initData?.cf_api_key || "",
       cf_email: initData?.cf_email || "",
       cf_record_types: initData?.cf_record_types || "CNAME,A,TXT",
       cf_api_key_encrypted: initData?.cf_api_key_encrypted || false,
+      aliyun_access_key_id: initData?.aliyun_access_key_id || "",
+      aliyun_access_key_secret: initData?.aliyun_access_key_secret || "",
+      aliyun_region: initData?.aliyun_region || "cn-hangzhou",
+      aliyun_domain_name: initData?.aliyun_domain_name || "",
+      aliyun_record_types: initData?.aliyun_record_types || "A,AAAA,CNAME,MX,TXT,NS,SRV,CAA,PTR",
       resend_api_key: initData?.resend_api_key || "",
       min_url_length: initData?.min_url_length,
       min_email_length: initData?.min_email_length,
@@ -187,6 +197,63 @@ export function DomainForm({
       toast.error("Access Failed", {
         description: "Please check your Cloudflare settings and try again.",
       });
+    });
+  };
+
+  const handleAliyunCheckAccess = async (event) => {
+    event?.stopPropagation();
+    if (!currentRecordStatus) return;
+
+    if (isCheckedAliyunConfig) {
+      setIsCheckedAliyunConfig(false);
+    }
+
+    startCheckCfTransition(async () => {
+      const values = getValues(["aliyun_access_key_id", "aliyun_access_key_secret", "aliyun_domain_name"]);
+      console.log("阿里云验证参数:", values);
+      
+      if (!values[0] || !values[1] || !values[2]) {
+        toast.error("请填写完整的阿里云配置信息", {
+          description: "Access Key ID、Access Key Secret 和域名名称都是必需的。",
+        });
+        return;
+      }
+      
+      try {
+        const res = await fetch(
+          `/api/domain/check-aliyun?access_key_id=${encodeURIComponent(values[0])}&access_key_secret=${encodeURIComponent(values[1])}&domain_name=${encodeURIComponent(values[2])}`,
+        );
+        
+        console.log("阿里云验证响应状态:", res.status);
+        
+        if (res.ok) {
+          const data = await res.json();
+          console.log("阿里云验证响应数据:", data);
+          
+          if (data.success) {
+            setIsCheckedAliyunConfig(true);
+            toast.success("阿里云 DNS 配置验证成功");
+            return;
+          } else {
+            toast.error(data.message || "阿里云 DNS 配置验证失败", {
+              description: "请检查您的阿里云 DNS 配置并重试。",
+            });
+          }
+        } else {
+          const errorData = await res.json().catch(() => ({}));
+          console.log("阿里云验证错误响应:", errorData);
+          toast.error(`验证失败 (${res.status})`, {
+            description: errorData.message || "请检查您的阿里云 DNS 配置并重试。",
+          });
+        }
+      } catch (error) {
+        console.error("阿里云验证网络错误:", error);
+        toast.error("网络错误", {
+          description: "无法连接到验证服务，请检查网络连接。",
+        });
+      }
+      
+      setIsCheckedAliyunConfig(false);
     });
   };
 
@@ -344,14 +411,18 @@ export function DomainForm({
         <Collapsible className="relative mt-2 rounded-md bg-neutral-100 p-4 dark:bg-neutral-800">
           <CollapsibleTrigger className="flex w-full items-center justify-between">
             <h2 className="absolute left-2 top-5 flex gap-2 text-xs font-semibold text-neutral-400">
-              {t("Cloudflare Configs")} ({t("Optional")})
-              <Icons.cloudflare className="mx-0.5 size-4" />
+              {t("DNS Provider Configs")} ({t("Optional")})
+              {currentDnsProvider === "cloudflare" ? (
+                <Icons.cloudflare className="mx-0.5 size-4" />
+              ) : (
+                <span className="mx-0.5 text-xs">☁️</span>
+              )}
             </h2>
             {ReadyBadge(
               currentRecordStatus,
-              isCheckedCfConfig,
+              currentDnsProvider === "cloudflare" ? isCheckedCfConfig : isCheckedAliyunConfig,
               isCheckingCf,
-              "cf",
+              currentDnsProvider,
             )}
             <Icons.chevronDown className="ml-2 size-4" />
           </CollapsibleTrigger>
@@ -362,11 +433,44 @@ export function DomainForm({
                 {t("Associate with 'Subdomain Service' status")}
               </div>
             )}
+            
+            {/* DNS 提供商选择 */}
             <FormSectionColumns title="">
               <div className="flex w-full items-start justify-between gap-2">
-                <Label className="mt-2.5 text-nowrap" htmlFor="zone_id">
-                  {"Zone ID"}:
+                <Label className="mt-2.5 text-nowrap" htmlFor="dns_provider">
+                  {t("DNS Provider")}:
                 </Label>
+                <div className="w-full sm:w-3/5">
+                  <select
+                    id="dns_provider"
+                    className="flex-1 rounded-md border border-neutral-300 bg-neutral-50 px-3 py-2 text-sm shadow-inner dark:border-neutral-600 dark:bg-neutral-700"
+                    {...register("dns_provider_type")}
+                    value={currentDnsProvider}
+                    onChange={(e) => {
+                      setValue("dns_provider_type", e.target.value);
+                      setCurrentDnsProvider(e.target.value);
+                    }}
+                    disabled={!currentRecordStatus}
+                  >
+                    <option value="cloudflare">Cloudflare</option>
+                    <option value="aliyun">阿里云 DNS</option>
+                  </select>
+                  <div className="flex flex-col justify-between p-1">
+                    <p className="pb-0.5 text-[13px] text-muted-foreground">
+                      选择要使用的 DNS 服务提供商
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </FormSectionColumns>
+            {/* Cloudflare 配置 */}
+            {currentDnsProvider === "cloudflare" && (
+              <>
+                <FormSectionColumns title="">
+                  <div className="flex w-full items-start justify-between gap-2">
+                    <Label className="mt-2.5 text-nowrap" htmlFor="zone_id">
+                      {"Zone ID"}:
+                    </Label>
                 <div className="w-full sm:w-3/5">
                   <Input
                     id="target"
@@ -492,6 +596,167 @@ export function DomainForm({
                 </div>
               </div>
             </FormSectionColumns>
+              </>
+            )}
+
+            {/* 阿里云 DNS 配置 */}
+            {currentDnsProvider === "aliyun" && (
+              <>
+                <FormSectionColumns title="">
+                  <div className="flex w-full items-start justify-between gap-2">
+                    <Label className="mt-2.5 text-nowrap" htmlFor="aliyun_access_key_id">
+                      {t("Access Key ID")}:
+                    </Label>
+                    <div className="w-full sm:w-3/5">
+                      <Input
+                        id="aliyun_access_key_id"
+                        className="flex-1 bg-neutral-50 shadow-inner"
+                        size={32}
+                        {...register("aliyun_access_key_id")}
+                        disabled={!currentRecordStatus}
+                      />
+                      <div className="flex flex-col justify-between p-1">
+                        {errors?.aliyun_access_key_id ? (
+                          <p className="pb-0.5 text-[13px] text-red-600">
+                            {errors.aliyun_access_key_id.message}
+                          </p>
+                        ) : (
+                          <p className="pb-0.5 text-[13px] text-muted-foreground">
+                            {t("Required")}. 阿里云 AccessKey ID
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </FormSectionColumns>
+                
+                <FormSectionColumns title="">
+                  <div className="flex w-full items-start justify-between gap-2">
+                    <Label className="mt-2.5 text-nowrap" htmlFor="aliyun_access_key_secret">
+                      {t("Access Key Secret")}:
+                    </Label>
+                    <div className="w-full sm:w-3/5">
+                      <Input
+                        id="aliyun_access_key_secret"
+                        type="password"
+                        className="flex-1 bg-neutral-50 shadow-inner"
+                        size={32}
+                        {...register("aliyun_access_key_secret")}
+                        disabled={!currentRecordStatus}
+                      />
+                      <div className="flex flex-col justify-between p-1">
+                        {errors?.aliyun_access_key_secret ? (
+                          <p className="pb-0.5 text-[13px] text-red-600">
+                            {errors.aliyun_access_key_secret.message}
+                          </p>
+                        ) : (
+                          <p className="pb-0.5 text-[13px] text-muted-foreground">
+                            {t("Required")}. 阿里云 AccessKey Secret
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </FormSectionColumns>
+
+                <FormSectionColumns title="">
+                  <div className="flex w-full items-start justify-between gap-2">
+                    <Label className="mt-2.5 text-nowrap" htmlFor="aliyun_region">
+                      {t("Region")}:
+                    </Label>
+                    <div className="w-full sm:w-3/5">
+                      <Input
+                        id="aliyun_region"
+                        className="flex-1 bg-neutral-50 shadow-inner"
+                        size={32}
+                        {...register("aliyun_region")}
+                        disabled={!currentRecordStatus}
+                      />
+                      <div className="flex flex-col justify-between p-1">
+                        <p className="pb-0.5 text-[13px] text-muted-foreground">
+                          {t("Optional")}. 阿里云区域，默认为 cn-hangzhou
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </FormSectionColumns>
+
+                <FormSectionColumns title="">
+                  <div className="flex w-full items-start justify-between gap-2">
+                    <Label className="mt-2.5 text-nowrap" htmlFor="aliyun_domain_name">
+                      {t("Domain Name")}:
+                    </Label>
+                    <div className="w-full sm:w-3/5">
+                      <Input
+                        id="aliyun_domain_name"
+                        className="flex-1 bg-neutral-50 shadow-inner"
+                        size={32}
+                        {...register("aliyun_domain_name")}
+                        disabled={!currentRecordStatus}
+                      />
+                      <div className="flex flex-col justify-between p-1">
+                        {errors?.aliyun_domain_name ? (
+                          <p className="pb-0.5 text-[13px] text-red-600">
+                            {errors.aliyun_domain_name.message}
+                          </p>
+                        ) : (
+                          <p className="pb-0.5 text-[13px] text-muted-foreground">
+                            {t("Required")}. 要在阿里云 DNS 中管理的域名
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </FormSectionColumns>
+
+                <FormSectionColumns title="">
+                  <div className="flex w-full items-start justify-between gap-2">
+                    <Label className="mt-2.5 text-nowrap" htmlFor="aliyun_record_types">
+                      {t("Record Types")}:
+                    </Label>
+                    <div className="w-full sm:w-3/5">
+                      <Input
+                        id="aliyun_record_types"
+                        className="flex-1 bg-neutral-50 shadow-inner"
+                        size={32}
+                        {...register("aliyun_record_types")}
+                        disabled={!currentRecordStatus}
+                        placeholder="A,AAAA,CNAME,MX,TXT,NS,SRV,CAA,PTR"
+                      />
+                      <div className="flex flex-col justify-between p-1">
+                        <p className="pb-0.5 text-[13px] text-muted-foreground">
+                          {t("Required")}. 阿里云 DNS 支持的记录类型，用逗号分隔
+                        </p>
+                        <p className="pb-0.5 text-[12px] text-blue-600">
+                          支持: A, AAAA, CNAME, MX, TXT, NS, SRV, CAA, PTR, ALIAS
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </FormSectionColumns>
+              </>
+            )}
+
+            {/* 配置验证按钮 */}
+            {currentRecordStatus && (
+              <div className="mt-4 flex justify-end">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={currentDnsProvider === "cloudflare" ? handleCfCheckAccess : handleAliyunCheckAccess}
+                  disabled={isCheckingCf}
+                  className="flex items-center gap-2"
+                >
+                  {isCheckingCf ? (
+                    <Icons.spinner className="size-4 animate-spin" />
+                  ) : (
+                    <Icons.check className="size-4" />
+                  )}
+                  {currentDnsProvider === "cloudflare" ? "验证 Cloudflare 配置" : "验证阿里云配置"}
+                </Button>
+              </div>
+            )}
           </CollapsibleContent>
         </Collapsible>
 

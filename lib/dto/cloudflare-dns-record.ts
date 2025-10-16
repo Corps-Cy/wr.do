@@ -18,6 +18,7 @@ export type UserRecordFormData = {
   type: string;
   content: string;
   ttl: number;
+  priority?: number; // MX 和 SRV 记录优先级
   proxied: boolean;
   proxiable: boolean;
   comment: string;
@@ -41,6 +42,7 @@ export async function createUserRecord(
       type,
       content,
       ttl,
+      priority,
       proxied,
       proxiable,
       comment,
@@ -60,6 +62,7 @@ export async function createUserRecord(
         type,
         content,
         ttl,
+        priority,
         proxied,
         proxiable,
         comment,
@@ -92,6 +95,7 @@ export async function updateUserRecordReview(
       type,
       content,
       ttl,
+      priority,
       proxied,
       proxiable,
       comment,
@@ -114,6 +118,7 @@ export async function updateUserRecordReview(
         type,
         content,
         ttl,
+        priority,
         proxied,
         proxiable,
         comment,
@@ -296,14 +301,36 @@ export async function deleteUserRecord(
   zone_id: string,
   active: number = 1,
 ) {
-  return await prisma.userRecord.delete({
-    where: {
-      userId,
-      record_id,
-      zone_id,
-      // active,
-    },
+  console.log("[数据库删除调试] 开始删除记录:", {
+    userId,
+    record_id,
+    zone_id,
+    active
   });
+
+  try {
+    // 先查找记录是否存在
+    const existingRecord = await prisma.userRecord.findUnique({
+      where: { record_id }
+    });
+
+    console.log("[数据库删除调试] 查找现有记录:", existingRecord);
+
+    if (!existingRecord) {
+      console.log("[数据库删除调试] 记录不存在，无法删除");
+      return null;
+    }
+
+    const result = await prisma.userRecord.delete({
+      where: { record_id }
+    });
+
+    console.log("[数据库删除调试] 删除成功:", result);
+    return result;
+  } catch (error) {
+    console.error("[数据库删除调试] 删除失败:", error);
+    throw error;
+  }
 }
 
 export async function updateUserRecord(

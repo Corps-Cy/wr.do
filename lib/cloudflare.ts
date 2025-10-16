@@ -8,6 +8,7 @@ export interface CreateDNSRecord {
   content: string;
   proxied?: boolean;
   ttl?: number;
+  priority?: number; // MX 和 SRV 记录优先级
   tags?: string[];
   comment?: string;
 }

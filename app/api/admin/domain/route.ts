@@ -55,11 +55,17 @@ export async function POST(req: NextRequest) {
       enable_short_link: !!data.enable_short_link,
       enable_email: !!data.enable_email,
       enable_dns: !!data.enable_dns,
+      dns_provider_type: data.dns_provider_type || "cloudflare",
       cf_zone_id: data.cf_zone_id,
       cf_api_key: data.cf_api_key,
       cf_email: data.cf_email,
       cf_record_types: data.cf_record_types,
       cf_api_key_encrypted: false,
+      aliyun_access_key_id: data.aliyun_access_key_id,
+      aliyun_access_key_secret: data.aliyun_access_key_secret,
+      aliyun_region: data.aliyun_region || "cn-hangzhou",
+      aliyun_domain_name: data.aliyun_domain_name,
+      aliyun_record_types: data.aliyun_record_types || "A,AAAA,CNAME,MX,TXT,NS,SRV,CAA,PTR",
       resend_api_key: data.resend_api_key,
       max_short_links: data.max_short_links,
       max_email_forwards: data.max_email_forwards,
@@ -72,7 +78,12 @@ export async function POST(req: NextRequest) {
 
     return Response.json(newDomain, { status: 200 });
   } catch (error) {
-    console.error("[Error]", error);
+    console.error("[Domain Creation Error]", error);
+    console.error("[Error Details]", {
+      message: error.message,
+      stack: error.stack,
+      name: error.name
+    });
     return Response.json(error.message || "Server error", { status: 500 });
   }
 }
@@ -91,10 +102,16 @@ export async function PUT(req: NextRequest) {
       enable_short_link,
       enable_email,
       enable_dns,
+      dns_provider_type,
       cf_zone_id,
       cf_api_key,
       cf_email,
       cf_record_types,
+      aliyun_access_key_id,
+      aliyun_access_key_secret,
+      aliyun_region,
+      aliyun_domain_name,
+      aliyun_record_types,
       resend_api_key,
       min_url_length,
       min_email_length,
@@ -115,11 +132,17 @@ export async function PUT(req: NextRequest) {
       enable_email: !!enable_email,
       enable_dns: !!enable_dns,
       active: !!active,
+      dns_provider_type: dns_provider_type || "cloudflare",
       cf_zone_id,
       cf_api_key,
       cf_email,
       cf_record_types,
       cf_api_key_encrypted: false,
+      aliyun_access_key_id,
+      aliyun_access_key_secret,
+      aliyun_region,
+      aliyun_domain_name,
+      aliyun_record_types,
       resend_api_key,
       min_url_length,
       min_email_length,

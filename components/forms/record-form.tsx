@@ -71,6 +71,72 @@ export function RecordForm({
   const [allowedRecordTypes, setAllowedRecordTypes] = useState<string[]>([]);
   const isAdmin = action.indexOf("admin") > -1;
 
+  // 根据记录类型获取内容字段的标签和描述
+  const getContentFieldInfo = (recordType: string) => {
+    switch (recordType) {
+      case 'A':
+        return {
+          title: t("IPv4 地址"),
+          description: `${t("Required")}. ${t("Example")} 192.168.1.1`,
+          placeholder: "192.168.1.1"
+        };
+      case 'AAAA':
+        return {
+          title: t("IPv6 地址"),
+          description: `${t("Required")}. ${t("Example")} 2001:db8::1`,
+          placeholder: "2001:db8::1"
+        };
+      case 'CNAME':
+        return {
+          title: t("目标域名"),
+          description: `${t("Required")}. ${t("Example")} www.example.com`,
+          placeholder: "www.example.com"
+        };
+      case 'MX':
+        return {
+          title: t("邮件服务器"),
+          description: `${t("Required")}. ${t("Example")} 10 mail.example.com`,
+          placeholder: "10 mail.example.com"
+        };
+      case 'TXT':
+        return {
+          title: t("文本内容"),
+          description: `${t("Required")}. ${t("Example")} "v=spf1 include:_spf.google.com ~all"`,
+          placeholder: '"v=spf1 include:_spf.google.com ~all"'
+        };
+      case 'NS':
+        return {
+          title: t("域名服务器"),
+          description: `${t("Required")}. ${t("Example")} ns1.example.com`,
+          placeholder: "ns1.example.com"
+        };
+      case 'SRV':
+        return {
+          title: t("服务记录"),
+          description: `${t("Required")}. ${t("Example")} 10 5 80 server.example.com`,
+          placeholder: "10 5 80 server.example.com"
+        };
+      case 'CAA':
+        return {
+          title: t("CA 授权"),
+          description: `${t("Required")}. ${t("Example")} 0 issue "ca.example.com"`,
+          placeholder: '0 issue "ca.example.com"'
+        };
+      case 'PTR':
+        return {
+          title: t("反向解析"),
+          description: `${t("Required")}. ${t("Example")} hostname.example.com`,
+          placeholder: "hostname.example.com"
+        };
+      default:
+        return {
+          title: t("Content"),
+          description: t("Required"),
+          placeholder: ""
+        };
+    }
+  };
+
   const t = useTranslations("List");
 
   const {
@@ -89,6 +155,7 @@ export function RecordForm({
       comment: initData?.comment || "",
       name: initData?.name ? initData.name.split(".")[0] : "",
       content: initData?.content || "",
+      priority: initData?.priority || 10,
     },
   });
 
@@ -97,6 +164,8 @@ export function RecordForm({
     {
       domain_name: string;
       cf_record_types: string;
+      aliyun_record_types?: string;
+      dns_provider_type?: string;
       min_record_length: number;
     }[]
   >("/api/domain?feature=record", fetcher, {
@@ -131,11 +200,15 @@ export function RecordForm({
 
   useEffect(() => {
     if (recordDomains && recordDomains.length > 0) {
-      setAllowedRecordTypes(
-        recordDomains
-          .find((d) => d.domain_name === validDefaultDomain)!
-          .cf_record_types.split(","),
-      );
+      const currentDomain = recordDomains.find((d) => d.domain_name === validDefaultDomain);
+      if (currentDomain) {
+        // 根据 DNS 提供商选择相应的记录类型
+        if (currentDomain.dns_provider_type === "aliyun" && currentDomain.aliyun_record_types) {
+          setAllowedRecordTypes(currentDomain.aliyun_record_types.split(","));
+        } else {
+          setAllowedRecordTypes(currentDomain.cf_record_types.split(","));
+        }
+      }
       setLimitLen(
         recordDomains.find((d) => d.domain_name === currentZoneName)
           ?.min_record_length || 3,
@@ -230,6 +303,7 @@ export function RecordForm({
   const handleDeleteRecord = async () => {
     if (type === "edit") {
       startDeleteTransition(async () => {
+        console.log("[删除调试] 开始删除记录:", initData?.record_id);
         const response = await fetch(`${action}/delete`, {
           method: "POST",
           body: JSON.stringify({
@@ -239,15 +313,25 @@ export function RecordForm({
             userId: initData?.userId,
           }),
         });
+        console.log("[删除调试] 删除响应状态:", response.status);
+        
         if (!response.ok || response.status !== 200) {
+          const errorText = await response.text();
+          console.log("[删除调试] 删除失败:", errorText);
           toast.error("Delete Failed", {
-            description: await response.text(),
+            description: errorText,
           });
         } else {
-          await response.json();
+          const result = await response.json();
+          console.log("[删除调试] 删除成功:", result);
           toast.success(`Success`);
           setShowForm(false);
-          onRefresh();
+          // 确保刷新列表
+          console.log("[删除调试] 准备刷新列表");
+          setTimeout(() => {
+            console.log("[删除调试] 执行刷新列表");
+            onRefresh();
+          }, 100);
         }
       });
     }
@@ -446,22 +530,17 @@ export function RecordForm({
           </FormSectionColumns>
           <FormSectionColumns
             required
-            title={
-              ["CNAME"].includes(currentRecordType)
-                ? t("Content")
-                : ["A", "AAAA"].includes(currentRecordType)
-                  ? t("IPv4 address")
-                  : t("Content")
-            }
+            title={getContentFieldInfo(currentRecordType).title}
           >
             <div className="flex w-full items-center gap-2">
               <Label className="sr-only" htmlFor="content">
-                t("Content")
+                {getContentFieldInfo(currentRecordType).title}
               </Label>
               <Input
                 id="content"
                 className="flex-1 shadow-inner"
                 size={32}
+                placeholder={getContentFieldInfo(currentRecordType).placeholder}
                 {...register("content")}
               />
             </div>
@@ -472,16 +551,47 @@ export function RecordForm({
                 </p>
               ) : (
                 <p className="pb-0.5 text-[13px] text-muted-foreground">
-                  {["CNAME"].includes(currentRecordType)
-                    ? `${t("Required")}. ${t("Example")} www.example.com`
-                    : ["A", "AAAA"].includes(currentRecordType)
-                      ? `${t("Required")}. ${t("Example")} 8.8.8.8`
-                      : t("Required")}
+                  {getContentFieldInfo(currentRecordType).description}
                 </p>
               )}
             </div>
           </FormSectionColumns>
         </div>
+        {/* 优先级字段 - 仅对 MX 和 SRV 记录显示 */}
+        {["MX", "SRV"].includes(currentRecordType) && (
+          <div className="items-center justify-start gap-4 md:flex">
+            <FormSectionColumns title={t("优先级")} required>
+              <div className="flex w-full items-center gap-2">
+                <Label className="sr-only" htmlFor="priority">
+                  {t("优先级")}
+                </Label>
+                <Input
+                  id="priority"
+                  className="flex-1 shadow-inner"
+                  size={32}
+                  type="number"
+                  min="0"
+                  max="65535"
+                  placeholder={currentRecordType === "MX" ? "10" : "10"}
+                  {...register("priority", { valueAsNumber: true })}
+                />
+              </div>
+              <div className="flex flex-col justify-between p-1">
+                {errors?.priority ? (
+                  <p className="pb-0.5 text-[13px] text-red-600">
+                    {errors.priority.message}
+                  </p>
+                ) : (
+                  <p className="pb-0.5 text-[13px] text-muted-foreground">
+                    {currentRecordType === "MX" 
+                      ? `${t("Required")}. ${t("Example")} 10`
+                      : `${t("Required")}. ${t("Example")} 10`}
+                  </p>
+                )}
+              </div>
+            </FormSectionColumns>
+          </div>
+        )}
         <div className="items-center justify-start gap-4 md:flex">
           <FormSectionColumns title="TTL" required>
             <Select

@@ -11,11 +11,17 @@ export interface DomainConfig {
   enable_short_link: boolean;
   enable_email: boolean;
   enable_dns: boolean;
+  dns_provider_type?: string;
   cf_zone_id: string | null;
   cf_api_key: string | null;
   cf_email: string | null;
   cf_record_types: string;
   cf_api_key_encrypted: boolean;
+  aliyun_access_key_id: string | null;
+  aliyun_access_key_secret: string | null;
+  aliyun_region: string | null;
+  aliyun_domain_name: string | null;
+  aliyun_record_types: string | null;
   resend_api_key: string | null;
   min_url_length: number;
   min_email_length: number;
@@ -73,7 +79,9 @@ export async function getDomainsByFeature(
       where: { [feature]: true },
       select: {
         domain_name: true,
+        dns_provider_type: true,
         cf_record_types: true,
+        aliyun_record_types: true,
         min_url_length: true,
         min_email_length: true,
         min_record_length: true,
@@ -83,6 +91,10 @@ export async function getDomainsByFeature(
         cf_zone_id: admin,
         cf_api_key: admin,
         cf_email: admin,
+        aliyun_access_key_id: admin,
+        aliyun_access_key_secret: admin,
+        aliyun_region: admin,
+        aliyun_domain_name: admin,
       },
     });
     return domains;
@@ -97,7 +109,9 @@ export async function getDomainsByFeatureClient(feature: string) {
       where: { [feature]: true },
       select: {
         domain_name: true,
+        dns_provider_type: true,
         cf_record_types: true,
+        aliyun_record_types: true,
         min_url_length: true,
         min_email_length: true,
         min_record_length: true,

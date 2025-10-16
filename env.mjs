@@ -17,6 +17,15 @@ export const env = createEnv({
     RESEND_FROM_EMAIL: z.string().optional(),
     SCREENSHOTONE_BASE_URL: z.string().optional(),
     GITHUB_TOKEN: z.string().optional(),
+    // 阿里云 DNS 配置
+    ALIYUN_ACCESS_KEY_ID: z.string().optional(),
+    ALIYUN_ACCESS_KEY_SECRET: z.string().optional(),
+    ALIYUN_REGION: z.string().default('cn-hangzhou'),
+    // 第三方邮件服务配置
+    FORWARD_EMAIL_API_KEY: z.string().optional(),
+    IMPROVMX_API_KEY: z.string().optional(),
+    MAILGUN_API_KEY: z.string().optional(),
+    MAILGUN_DOMAIN: z.string().optional(),
   },
   client: {
     NEXT_PUBLIC_APP_URL: z.string().optional(),
@@ -43,5 +52,14 @@ export const env = createEnv({
     GITHUB_TOKEN: process.env.GITHUB_TOKEN,
     LinuxDo_CLIENT_ID: process.env.LinuxDo_CLIENT_ID,
     LinuxDo_CLIENT_SECRET: process.env.LinuxDo_CLIENT_SECRET,
+    // 阿里云 DNS 配置
+    ALIYUN_ACCESS_KEY_ID: process.env.ALIYUN_ACCESS_KEY_ID,
+    ALIYUN_ACCESS_KEY_SECRET: process.env.ALIYUN_ACCESS_KEY_SECRET,
+    ALIYUN_REGION: process.env.ALIYUN_REGION,
+    // 第三方邮件服务配置
+    FORWARD_EMAIL_API_KEY: process.env.FORWARD_EMAIL_API_KEY,
+    IMPROVMX_API_KEY: process.env.IMPROVMX_API_KEY,
+    MAILGUN_API_KEY: process.env.MAILGUN_API_KEY,
+    MAILGUN_DOMAIN: process.env.MAILGUN_DOMAIN,
   },
 });

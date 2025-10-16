@@ -15,6 +15,7 @@ export const createRecordSchema = z.object({
     .max(64),
   content: z.string().min(1).max(1024),
   ttl: z.number().min(1).max(36000).default(1),
+  priority: z.number().min(0).max(65535).optional(),
   proxied: z.boolean().default(false),
   comment: z.string().optional(),
 });
@@ -36,6 +37,7 @@ export const createUserRecordSchema = z.object({
     .max(64),
   content: z.string().min(1).max(1024),
   ttl: z.number().min(1).max(36000).default(1),
+  priority: z.number().min(0).max(65535).optional(),
   proxied: z.boolean().default(false),
   proxiable: z.boolean().default(true),
   comment: z.string().optional(),

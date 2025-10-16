@@ -97,6 +97,7 @@ model UserRecord {
   proxiable   Boolean?
   proxied     Boolean?
   ttl         Int?
+  priority    Int?      // MX 和 SRV 记录优先级
   comment     String?
   tags        String
   created_on  DateTime?
@@ -255,24 +256,30 @@ model UserSendEmail {
 }
 
 model Domain {
-  id                   String  @id @default(uuid())
-  domain_name          String  @unique
-  enable_short_link    Boolean @default(false)
-  enable_email         Boolean @default(false)
-  enable_dns           Boolean @default(false)
-  cf_zone_id           String?
-  cf_api_key           String?
-  cf_email             String?
-  cf_record_types      String  @default("CNAME,A,TXT")
-  cf_api_key_encrypted Boolean
-  resend_api_key       String?
-  max_short_links      Int?
-  max_email_forwards   Int?
-  max_dns_records      Int?
-  min_url_length       Int     @default(1)
-  min_email_length     Int     @default(1)
-  min_record_length    Int     @default(1)
-  active               Boolean @default(true)
+  id                      String  @id @default(uuid())
+  domain_name             String  @unique
+  enable_short_link       Boolean @default(false)
+  enable_email            Boolean @default(false)
+  enable_dns              Boolean @default(false)
+  dns_provider_type       String  @default("cloudflare")
+  cf_zone_id              String?
+  cf_api_key              String?
+  cf_email                String?
+  cf_record_types         String  @default("CNAME,A,TXT")
+  cf_api_key_encrypted    Boolean
+  aliyun_access_key_id    String?
+  aliyun_access_key_secret String?
+  aliyun_region           String? @default("cn-hangzhou")
+  aliyun_domain_name      String?
+  aliyun_record_types     String? @default("A,AAAA,CNAME,MX,TXT,NS,SRV,CAA,PTR")
+  resend_api_key          String?
+  max_short_links         Int?
+  max_email_forwards      Int?
+  max_dns_records         Int?
+  min_url_length          Int     @default(1)
+  min_email_length        Int     @default(1)
+  min_record_length       Int     @default(1)
+  active                  Boolean @default(true)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @default(now())

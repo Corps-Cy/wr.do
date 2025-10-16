@@ -1,4 +1,6 @@
 import { createDNSRecord } from "@/lib/cloudflare";
+import { DNSManager } from "@/lib/dns/manager";
+import { DNSConfig } from "@/lib/dns/types";
 import {
   createUserRecord,
   getUserRecordByTypeNameContent,
@@ -89,22 +91,70 @@ export async function POST(req: Request) {
       });
     }
 
-    const data = await createDNSRecord(
-      matchedZone.cf_zone_id,
-      matchedZone.cf_api_key,
-      matchedZone.cf_email,
-      record,
-    );
+    // 根据域名的 DNS 提供商选择相应的创建方法
+    let data;
+    
+    if (matchedZone.dns_provider_type === "aliyun") {
+      // 使用阿里云 DNS 管理器
+      const dnsConfig: DNSConfig = {
+        provider: 'aliyun',
+        aliyun_access_key_id: matchedZone.aliyun_access_key_id!,
+        aliyun_access_key_secret: matchedZone.aliyun_access_key_secret!,
+        aliyun_region: matchedZone.aliyun_region || 'cn-hangzhou',
+        aliyun_domain_name: matchedZone.aliyun_domain_name!
+      };
+      
+      const dnsManager = new DNSManager();
+      const providerKey = 'aliyun';
+      dnsManager.registerProvider(providerKey, dnsConfig);
+      const aliyunRecord = await dnsManager.createDNSRecord({
+        name: record_name,
+        type: record.type,
+        content: record.content,
+        ttl: record.ttl || 600
+      }, providerKey);
+      
+      if (!aliyunRecord.success) {
+        return Response.json(aliyunRecord.error?.message || "阿里云 DNS 记录创建失败", {
+          status: 501,
+        });
+      }
+      
+      data = {
+        success: true,
+        result: {
+          id: aliyunRecord.data?.id || generateSecret(16),
+          name: aliyunRecord.data?.name || record_name,
+          type: aliyunRecord.data?.type || record.type,
+          content: aliyunRecord.data?.content || record.content,
+          proxied: false, // 阿里云不支持代理
+          proxiable: false,
+          ttl: aliyunRecord.data?.ttl || record.ttl || 600,
+          comment: record.comment || "",
+          tags: [],
+          created_on: new Date().toISOString(),
+          modified_on: new Date().toISOString()
+        }
+      };
+    } else {
+      // 使用 Cloudflare（默认）
+      data = await createDNSRecord(
+        matchedZone.cf_zone_id,
+        matchedZone.cf_api_key,
+        matchedZone.cf_email,
+        record,
+      );
+    }
 
     if (!data.success || !data.result?.id) {
       // console.log("[data]", data);
-      return Response.json(data.errors[0].message, {
+      return Response.json(data.errors?.[0]?.message || "DNS 记录创建失败", {
         status: 501,
       });
     } else {
       const res = await createUserRecord(target_user.id, {
         record_id: data.result.id,
-        zone_id: matchedZone.cf_zone_id,
+        zone_id: matchedZone.dns_provider_type === "aliyun" ? matchedZone.aliyun_domain_name : matchedZone.cf_zone_id,
         zone_name: matchedZone.domain_name,
         name: data.result.name,
         type: data.result.type,

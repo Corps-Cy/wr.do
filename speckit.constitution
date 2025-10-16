@@ -1,0 +1,402 @@
+# wr.do 项目宪章
+
+> 本文档定义了 wr.do 项目的核心原则和标准，涵盖代码质量、测试、用户体验和性能要求。
+
+## 1. 代码质量原则
+
+### 1.1 TypeScript 严格性
+- **严格类型检查**: 所有新代码必须启用 `strictNullChecks`，避免 `any` 类型滥用
+- **类型优先**: 优先使用 TypeScript 原生类型，避免运行时类型检查
+- **接口定义**: 所有 API 请求/响应、组件 Props、数据模型必须有明确的类型定义
+- **类型复用**: 在 `lib/dto/` 和 `types/` 目录中集中管理共享类型定义
+
+### 1.2 代码组织与架构
+- **关注点分离**: 
+  - `app/` - 页面路由和布局
+  - `components/` - 可复用 UI 组件
+  - `lib/` - 业务逻辑和工具函数
+  - `actions/` - Server Actions
+  - `api/` - API 路由处理器
+- **组件粒度**: 单个组件文件不超过 300 行，复杂组件应拆分为子组件
+- **函数职责**: 每个函数只做一件事，函数体不超过 50 行
+- **循环依赖**: 严禁模块间循环依赖，使用依赖注入或事件总线解决
+
+### 1.3 命名规范
+- **文件命名**: 
+  - 组件使用 PascalCase: `UserProfile.tsx`
+  - 工具函数使用 kebab-case: `format-date.ts`
+  - 页面路由使用 Next.js 约定: `page.tsx`, `layout.tsx`
+- **变量命名**:
+  - 布尔值以 `is`, `has`, `should` 开头: `isActive`, `hasPermission`
+  - 常量使用 UPPER_SNAKE_CASE: `MAX_UPLOAD_SIZE`
+  - 函数使用动词开头: `fetchUser`, `calculateTotal`
+- **语义化**: 命名应清晰表达意图，避免缩写（除非是业界通用术语）
+
+### 1.4 代码风格
+- **格式化**: 使用 Prettier 统一格式化，配置见 `prettier.config.js`
+- **Linting**: 遵循 ESLint 配置，commit 前必须通过 lint 检查
+- **导入顺序**: 使用 `@ianvs/prettier-plugin-sort-imports` 自动排序
+  1. React/Next.js 核心库
+  2. 第三方依赖
+  3. 内部模块（@/ 别名）
+  4. 相对路径导入
+  5. 样式文件
+- **注释规范**:
+  - 复杂业务逻辑必须添加说明注释
+  - 使用 JSDoc 注释公共 API 和工具函数
+  - 避免无意义注释，代码应自解释
+
+### 1.5 安全编码
+- **输入验证**: 所有用户输入必须使用 Zod schema 验证
+- **XSS 防护**: 禁止使用 `dangerouslySetInnerHTML`，如必须使用需经过 DOMPurify 清洗
+- **SQL 注入防护**: 使用 Prisma 参数化查询，禁止字符串拼接 SQL
+- **敏感数据**: 不在前端代码中硬编码 API keys、密钥等敏感信息
+- **权限检查**: 所有 API 路由和 Server Actions 必须验证用户权限
+
+## 2. 测试标准
+
+### 2.1 测试覆盖率目标
+- **核心业务逻辑**: 80%+ 单元测试覆盖率
+- **API 路由**: 100% 端到端测试覆盖
+- **关键用户流程**: 完整的集成测试（注册、登录、核心功能）
+- **UI 组件**: 至少覆盖主要交互场景的组件测试
+
+### 2.2 测试分层策略
+```
+E2E 测试 (10%)
+├── 关键用户旅程
+├── 跨页面流程
+└── 支付/认证等核心功能
+
+集成测试 (30%)
+├── API 路由测试
+├── 数据库操作测试
+└── 第三方服务集成测试
+
+单元测试 (60%)
+├── 工具函数测试
+├── 业务逻辑测试
+├── Validation schema 测试
+└── 组件逻辑测试
+```
+
+### 2.3 测试编写规范
+- **测试文件位置**: 
+  - 单元测试: `__tests__/` 目录或 `.test.ts` 后缀
+  - 集成测试: `__tests__/integration/`
+  - E2E 测试: `__tests__/e2e/`
+- **测试命名**: 使用 `describe` 和 `it` 清晰描述测试场景
+  ```typescript
+  describe('UserService', () => {
+    describe('updateUserProfile', () => {
+      it('should update user name when valid data provided', () => {})
+      it('should throw error when user not found', () => {})
+    })
+  })
+  ```
+- **AAA 模式**: 遵循 Arrange-Act-Assert 模式
+- **测试独立性**: 每个测试应独立运行，不依赖其他测试的执行顺序
+- **Mock 策略**: 
+  - 单元测试: Mock 外部依赖
+  - 集成测试: 使用真实依赖或测试数据库
+  - E2E 测试: 使用真实环境
+
+### 2.4 测试数据管理
+- **Test Fixtures**: 在 `__tests__/fixtures/` 中管理测试数据
+- **数据库**: 使用独立的测试数据库，每次测试后清理
+- **随机数据**: 使用 faker.js 生成随机但合理的测试数据
+- **敏感数据**: 测试中不使用真实用户数据
+
+### 2.5 持续测试
+- **Pre-commit Hook**: 运行相关文件的单元测试
+- **PR 检查**: CI 必须通过所有测试
+- **回归测试**: Bug 修复必须添加对应的回归测试
+- **性能测试**: 关键 API 应有性能基准测试
+
+## 3. 用户体验一致性
+
+### 3.1 设计系统
+- **组件库**: 基于 shadcn/ui 和 Radix UI，所有 UI 组件必须使用统一的设计系统
+- **颜色系统**: 使用 Tailwind CSS 配置的颜色变量，支持亮色/暗色主题
+  ```css
+  --primary, --secondary, --accent, --muted
+  --foreground, --background
+  --destructive, --success, --warning
+  ```
+- **间距规范**: 使用 Tailwind 的间距系统 (4px 基准)
+  - 组件内边距: `p-2`, `p-4`, `p-6`
+  - 组件间距: `gap-2`, `gap-4`, `space-y-4`
+- **圆角标准**: 
+  - 小元素 (按钮、输入框): `rounded-md`
+  - 卡片: `rounded-lg`
+  - 模态框: `rounded-xl`
+
+### 3.2 交互体验
+- **响应速度**:
+  - 按钮点击: 立即视觉反馈（loading 状态）
+  - 表单提交: 显示加载指示器
+  - 页面切换: 使用 Next.js view-transitions 优化过渡
+- **加载状态**:
+  - 使用 `loading.tsx` 提供页面级骨架屏
+  - 组件级使用 Skeleton 组件
+  - 异步操作使用 Spinner 或进度条
+- **错误处理**:
+  - 友好的错误提示，避免技术术语
+  - 使用 `sonner` toast 显示操作结果
+  - 表单验证错误实时显示在字段下方
+  - 关键错误使用 `error.tsx` 边界捕获
+- **反馈机制**:
+  - 成功操作: 绿色 toast + 成功图标
+  - 失败操作: 红色 toast + 错误详情
+  - 警告信息: 黄色 alert 组件
+  - 确认操作: 使用 AlertDialog 二次确认
+
+### 3.3 可访问性 (A11y)
+- **键盘导航**: 所有交互元素支持键盘操作
+  - Tab 键正确的焦点顺序
+  - Enter/Space 触发按钮
+  - Escape 关闭模态框
+- **ARIA 标签**: 使用语义化 HTML 和适当的 ARIA 属性
+- **对比度**: 文本与背景对比度至少 4.5:1 (WCAG AA 标准)
+- **焦点可见**: 焦点状态必须清晰可见 (`focus-visible:ring-2`)
+- **屏幕阅读器**: 重要操作和状态变化提供屏幕阅读器支持
+
+### 3.4 国际化 (i18n)
+- **文本国际化**: 所有用户可见文本使用 `next-intl` 翻译
+- **翻译文件**: 维护 `locales/en.json` 和 `locales/zh.json`
+- **日期时间**: 使用 `date-fns` 格式化，根据用户区域设置
+- **数字格式**: 货币、百分比等根据区域格式化
+- **RTL 支持**: 布局考虑未来支持 RTL 语言
+
+### 3.5 响应式设计
+- **断点标准**: 使用 Tailwind 默认断点
+  - Mobile: < 640px (sm)
+  - Tablet: 640px - 1024px (sm-lg)
+  - Desktop: 1024px+ (lg+)
+- **移动优先**: 默认样式针对移动端，使用 `sm:`, `md:`, `lg:` 扩展
+- **触摸友好**: 移动端按钮最小尺寸 44x44px
+- **导航适配**: 
+  - 桌面: 侧边栏导航
+  - 移动: 底部导航或汉堡菜单
+
+### 3.6 动效规范
+- **过渡时间**:
+  - 微小变化: 150ms
+  - 中等变化: 300ms
+  - 大型变化: 500ms
+- **缓动函数**: 使用 `ease-in-out` 或自定义曲线
+- **动画库**: 使用 `framer-motion` 实现复杂动画
+- **尊重偏好**: 检查 `prefers-reduced-motion` 设置
+
+## 4. 性能要求
+
+### 4.1 性能指标 (Core Web Vitals)
+- **LCP (Largest Contentful Paint)**: < 2.5s
+- **FID (First Input Delay)**: < 100ms
+- **CLS (Cumulative Layout Shift)**: < 0.1
+- **FCP (First Contentful Paint)**: < 1.8s
+- **TTI (Time to Interactive)**: < 3.5s
+- **TBT (Total Blocking Time)**: < 200ms
+
+### 4.2 资源优化
+- **图片优化**:
+  - 使用 Next.js `<Image>` 组件自动优化
+  - 响应式图片: `sizes` 和 `srcset` 属性
+  - 格式: 优先 WebP/AVIF
+  - 懒加载: 视口外图片延迟加载
+  - 尺寸: 不加载超过展示尺寸的图片
+- **字体优化**:
+  - 使用 Next.js Font Optimization
+  - 自托管字体，避免外部请求
+  - 使用 `font-display: swap`
+  - 预加载关键字体文件
+- **代码分割**:
+  - 路由级自动分割 (Next.js App Router)
+  - 组件级使用 `dynamic()` 动态导入
+  - 第三方库按需加载
+  ```typescript
+  const HeavyComponent = dynamic(() => import('./HeavyComponent'), {
+    loading: () => <Skeleton />,
+    ssr: false
+  })
+  ```
+
+### 4.3 渲染策略
+- **SSR vs CSR**:
+  - 公开页面: SSR (SEO 优化)
+  - 认证页面: SSR with Streaming
+  - 实时数据: CSR with SWR
+- **缓存策略**:
+  - 静态页面: ISR (Incremental Static Regeneration)
+  - API 响应: 适当的 `Cache-Control` 头
+  - 客户端: SWR 配置合理的 `revalidate` 时间
+- **Streaming**:
+  - 使用 `<Suspense>` 流式传输页面部分
+  - 优先显示关键内容，延迟加载次要内容
+- **并行数据获取**:
+  ```typescript
+  // Good: 并行获取
+  const [user, posts] = await Promise.all([
+    fetchUser(),
+    fetchPosts()
+  ])
+  
+  // Bad: 串行获取
+  const user = await fetchUser()
+  const posts = await fetchPosts()
+  ```
+
+### 4.4 数据库性能
+- **查询优化**:
+  - 使用 Prisma 的 `select` 只查询需要的字段
+  - 避免 N+1 查询，使用 `include` 预加载关联数据
+  - 复杂查询考虑使用 `$queryRaw`
+- **索引策略**:
+  - 频繁查询的字段添加索引
+  - 外键自动索引
+  - 复合索引用于多字段查询
+- **连接池**: 配置适当的数据库连接池大小
+- **分页**: 
+  - 列表数据必须分页，单页不超过 100 条
+  - 使用游标分页或偏移分页
+  - 提供加载更多或无限滚动
+
+### 4.5 API 性能
+- **响应时间**:
+  - 简单查询: < 200ms
+  - 复杂查询: < 500ms
+  - 数据修改: < 1s
+- **限流策略**:
+  - 公共 API: 100 req/min per IP
+  - 认证 API: 1000 req/min per user
+  - 实现指数退避重试
+- **数据传输**:
+  - 启用 gzip/brotli 压缩
+  - API 响应精简，移除不必要字段
+  - 大数据集使用流式传输
+- **缓存层**:
+  - 静态数据: CDN 缓存
+  - 动态数据: Redis 缓存热点数据
+  - 实现缓存失效策略
+
+### 4.6 监控与分析
+- **真实用户监控 (RUM)**:
+  - 使用 Vercel Analytics 监控 Web Vitals
+  - 配置 `@vercel/analytics` 收集性能数据
+- **错误追踪**: 
+  - 实现错误边界捕获 React 错误
+  - 日志记录 API 错误和异常
+  - 监控错误率和报警
+- **性能预算**:
+  - 页面总大小: < 1MB
+  - JavaScript bundle: < 300KB (gzipped)
+  - 首次加载时间: < 3s
+  - 定期审查，防止性能倒退
+- **性能分析工具**:
+  - Lighthouse CI 集成
+  - Chrome DevTools Performance
+  - Next.js Bundle Analyzer
+
+### 4.7 移动端性能
+- **网络优化**:
+  - 减少 HTTP 请求数量
+  - 关键资源预加载 `<link rel="preload">`
+  - DNS 预解析和预连接
+- **离线支持**:
+  - PWA 配置，Service Worker 缓存
+  - 关键页面离线可访问
+  - 离线状态友好提示
+- **数据节省**:
+  - 提供低数据模式选项
+  - 视频/图片质量可选
+  - 压缩 API 响应
+
+## 5. 代码审查清单
+
+### 5.1 提交 PR 前自查
+- [ ] 代码通过 ESLint 和 TypeScript 检查
+- [ ] 添加了必要的单元测试
+- [ ] 更新了相关文档
+- [ ] 测试了暗色/亮色主题
+- [ ] 测试了响应式布局 (移动端/桌面端)
+- [ ] 检查了浏览器控制台无错误
+- [ ] 验证了所有表单输入的校验
+- [ ] 确认了国际化文本翻译
+
+### 5.2 Code Review 关注点
+- [ ] 代码逻辑正确性
+- [ ] 性能影响 (大循环、昂贵操作)
+- [ ] 安全漏洞 (XSS, SQL 注入, CSRF)
+- [ ] 错误处理是否完善
+- [ ] 代码可读性和可维护性
+- [ ] 是否遵循项目架构和设计模式
+- [ ] 是否有不必要的依赖或重复代码
+
+## 6. 版本控制与发布
+
+### 6.1 Git 工作流
+- **分支策略**:
+  - `main`: 生产环境代码
+  - `develop`: 开发分支
+  - `feature/*`: 功能分支
+  - `fix/*`: Bug 修复分支
+  - `hotfix/*`: 紧急修复分支
+- **Commit 规范**: 使用 Conventional Commits
+  ```
+  feat: 新功能
+  fix: Bug 修复
+  docs: 文档更新
+  style: 代码格式调整
+  refactor: 重构
+  perf: 性能优化
+  test: 测试相关
+  chore: 构建/工具链更新
+  ```
+- **PR 规范**:
+  - 标题清晰描述变更
+  - 详细的描述和截图（UI 变更）
+  - 关联相关 Issue
+  - 至少一位审查者批准
+
+### 6.2 发布流程
+1. **版本号管理**: 遵循语义化版本 (Semver)
+   - MAJOR: 不兼容的 API 变更
+   - MINOR: 向后兼容的功能新增
+   - PATCH: 向后兼容的问题修正
+2. **发布前检查**:
+   - 所有测试通过
+   - 性能指标达标
+   - 安全漏洞扫描通过
+   - 数据库迁移脚本测试
+3. **发布后监控**:
+   - 监控错误率和性能指标
+   - 用户反馈收集
+   - 回滚计划准备
+
+## 7. 持续改进
+
+### 7.1 技术债务管理
+- **识别**: 定期代码审查，标记技术债务
+- **优先级**: 根据影响范围和风险评估
+- **偿还**: 每个迭代分配时间处理技术债务
+- **预防**: 代码审查把关，避免新增低质量代码
+
+### 7.2 学习与分享
+- **技术文档**: 维护架构决策记录 (ADR)
+- **知识分享**: 定期团队技术分享会
+- **最佳实践**: 更新 Constitution，记录经验教训
+- **代码示例**: 维护典型场景的示例代码
+
+### 7.3 工具升级
+- **依赖更新**: 定期更新依赖包，关注安全补丁
+- **框架升级**: 跟进 Next.js、React 等核心框架更新
+- **工具评估**: 定期评估新工具的适用性
+- **向后兼容**: 升级时确保向后兼容或提供迁移方案
+
+---
+
+**本宪章是活文档，应随项目演进持续更新。所有团队成员都有责任遵守和完善这些原则。**
+
+最后更新: 2025-10-15
+版本: 1.0.0
+
