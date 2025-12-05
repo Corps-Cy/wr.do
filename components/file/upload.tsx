@@ -17,7 +17,12 @@ import {
 import { CopyButton } from "@/components/shared/copy-button";
 import { Icons } from "@/components/shared/icons";
 
-import { BucketInfo, BucketUsage, StorageUserPlan } from ".";
+import {
+  BucketInfo,
+  BucketUsage,
+  StorageUserPlan,
+  buildFileUrl,
+} from ".";
 import DragAndDrop from "./drag-and-drop";
 
 export const FileUploader = ({
@@ -244,7 +249,7 @@ export const FileUploader = ({
                                     {t("Completed")}
                                   </div>
                                   <CopyButton
-                                    value={`${bucketInfo.custom_domain}/${file.fileName}`}
+                                    value={buildFileUrl(bucketInfo, file.fileName)}
                                   />
                                   <Button
                                     size="sm"

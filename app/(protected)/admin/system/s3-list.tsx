@@ -63,6 +63,12 @@ export default function S3Configs({}: {}) {
     },
     { label: "Ali OSS", value: "Ali OSS", platform: "ali", channel: "oss" },
     {
+      label: "MinIO",
+      value: "MinIO",
+      platform: "minio",
+      channel: "minio",
+    },
+    {
       label: "Custom Provider",
       value: "Custom Provider",
       platform: "custom provider",

@@ -105,9 +105,12 @@ export async function POST(request: NextRequest) {
         providerChannel.endpoint,
         providerChannel.access_key_id,
         providerChannel.secret_access_key,
+        undefined,
+        providerChannel.platform,
       ),
       bucket,
     );
+
     return NextResponse.json({ signedUrl });
   } catch (error) {
     return NextResponse.json("Error generating download URL", { status: 500 });
@@ -154,6 +157,8 @@ export async function DELETE(request: NextRequest) {
       providerChannel.endpoint,
       providerChannel.access_key_id,
       providerChannel.secret_access_key,
+      undefined,
+      providerChannel.platform,
     );
 
     for (const key of keys) {

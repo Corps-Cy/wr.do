@@ -98,6 +98,8 @@ export async function POST(request: NextRequest) {
       providerChannel.endpoint,
       providerChannel.access_key_id,
       providerChannel.secret_access_key,
+      undefined, // region 使用默认值
+      providerChannel.platform, // 传递 platform 以支持 MinIO
     );
 
     const signedUrls = await Promise.all(
@@ -175,6 +177,8 @@ export async function GET(request: NextRequest) {
       configs.s3_config_01.endpoint,
       configs.s3_config_01.access_key_id,
       configs.s3_config_01.secret_access_key,
+      undefined,
+      configs.s3_config_01.platform,
     );
 
     const pre_url = await getSignedUrl(
@@ -187,6 +191,7 @@ export async function GET(request: NextRequest) {
         expiresIn: 600,
       },
     );
+
     return Response.json({ url: pre_url });
   } catch (error: any) {
     return Response.json({ error: error.message });

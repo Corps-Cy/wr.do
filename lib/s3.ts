@@ -53,15 +53,28 @@ export function createS3Client(
   accessKeyId: string,
   secretAccessKey: string,
   region: string = "auto",
+  platform?: string,
 ) {
-  return new S3Client({
-    region: region,
+  // MinIO 需要使用路径风格（path-style）而不是虚拟主机风格（virtual-hosted-style）
+  // 路径风格：http://endpoint/bucket/key
+  // 虚拟主机风格：http://bucket.endpoint/key
+  const isMinIO = platform === "minio";
+
+  const clientConfig: any = {
+    region: region === "auto" ? "us-east-1" : region,
     endpoint: endpoint,
     credentials: {
       accessKeyId,
       secretAccessKey,
     },
-  });
+  };
+
+  // MinIO 需要强制使用路径风格
+  if (isMinIO) {
+    clientConfig.forcePathStyle = true;
+  }
+
+  return new S3Client(clientConfig);
 }
 
 export async function uploadFile(

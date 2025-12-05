@@ -51,6 +51,36 @@ export interface BucketInfo extends BucketItem {
   provider_name?: string;
 }
 
+/**
+ * 构建文件 URL，针对 MinIO 渠道进行特殊处理
+ * @param bucketInfo 存储桶信息
+ * @param key 文件路径
+ * @returns 完整的文件 URL
+ */
+export function buildFileUrl(bucketInfo: BucketInfo, key: string): string {
+  if (!bucketInfo.custom_domain) {
+    return key;
+  }
+
+  // MinIO 渠道需要特殊处理：如果 custom_domain 已经包含 bucket 路径，则不需要再拼接
+  // 对于 MinIO，如果 custom_domain 格式为 http://domain/bucket，则直接使用 custom_domain + key
+  // 如果 custom_domain 格式为 http://domain，则需要拼接 bucket 名
+  if (bucketInfo.platform === "minio") {
+    const domain = bucketInfo.custom_domain.trim();
+    // 检查 custom_domain 是否已经以 bucket 结尾
+    if (domain.endsWith(`/${bucketInfo.bucket}`)) {
+      // 如果已经包含 bucket，直接拼接 key
+      return `${domain}/${key}`;
+    } else {
+      // 如果没有包含 bucket，需要先拼接 bucket 再拼接 key
+      return `${domain}/${bucketInfo.bucket}/${key}`;
+    }
+  }
+
+  // 其他渠道保持原有逻辑
+  return `${bucketInfo.custom_domain}/${key}`;
+}
+
 export type DisplayType = "List" | "Grid";
 
 export interface FileListData {

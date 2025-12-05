@@ -29,7 +29,12 @@ import {
   truncateMiddle,
 } from "@/lib/utils";
 import { ClickableTooltip } from "@/components/ui/tooltip";
-import { BucketInfo, DisplayType, FileListData } from "@/components/file";
+import {
+  BucketInfo,
+  DisplayType,
+  FileListData,
+  buildFileUrl,
+} from "@/components/file";
 
 import { UrlForm } from "../forms/url-form";
 import { CopyButton } from "../shared/copy-button";
@@ -91,7 +96,7 @@ export default function UserFileList({
   // const isAdmin = action.includes("/admin");
 
   const getFileUrl = (key: string) => {
-    return `${bucketInfo.custom_domain}/${key}`;
+    return buildFileUrl(bucketInfo, key);
   };
 
   const handleSelectFile = (file: UserFileData) => {
@@ -688,7 +693,7 @@ const getFileIcon = (file: UserFileData, bucketInfo: BucketInfo) => {
           width={60}
           src={
             bucketInfo.custom_domain
-              ? `${bucketInfo.custom_domain}/${filename}`
+              ? buildFileUrl(bucketInfo, filename)
               : filename
           }
           alt={filename}
