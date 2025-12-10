@@ -75,9 +75,21 @@ export async function createUserRecord(
 
     // revalidatePath('/dashboard/settings');
     return { status: "success", data: res };
-  } catch (error) {
-    // console.log(error);
-    return { status: error };
+  } catch (error: any) {
+    console.error("[createUserRecord 错误]", error);
+    // 处理 Zod 验证错误
+    if (error instanceof Error) {
+      return { 
+        status: "error", 
+        message: error.message,
+        error: error 
+      };
+    }
+    return { 
+      status: "error", 
+      message: "Unknown error",
+      error: error 
+    };
   }
 }
 

@@ -3,6 +3,7 @@ import { createUserRecord } from "@/lib/dto/cloudflare-dns-record";
 import { getDomainsByFeature } from "@/lib/dto/domains";
 import { checkUserStatus } from "@/lib/dto/user";
 import { getCurrentUser } from "@/lib/session";
+import { prisma } from "@/lib/db";
 
 // 使用 require 方式导入阿里云 SDK，避免 ES 模块问题
 const Core = require('@alicloud/pop-core');
@@ -85,27 +86,61 @@ export async function POST(req: Request) {
             apiVersion: '2015-01-09'
           });
 
-          const params = {
-            "Lang": "zh",
-            "DomainName": matchedZone.aliyun_domain_name
-          };
-
           const requestOption = {
             method: 'POST',
             formatParams: false,
           };
 
-          console.log(`[阿里云API调试] 调用DescribeDomainRecords，域名: ${matchedZone.aliyun_domain_name}`);
-          const result = await client.request('DescribeDomainRecords', params, requestOption);
-          
-          console.log(`[阿里云API调试] 获取到结果:`, {
-            RequestId: result.RequestId,
-            TotalCount: result.TotalCount,
-            RecordCount: result.DomainRecords?.Record?.length || 0
-          });
+          // 分页获取所有记录
+          const allRecords: any[] = [];
+          let pageNumber = 1;
+          const pageSize = 100; // 每页最多 100 条
+          let totalCount = 0;
+          let hasMore = true;
 
-          if (result.DomainRecords?.Record) {
-            records = result.DomainRecords.Record.map((record: any) => ({
+          console.log(`[阿里云API调试] 开始分页获取DNS记录，域名: ${matchedZone.aliyun_domain_name}`);
+
+          while (hasMore) {
+            const params = {
+              "Lang": "zh",
+              "DomainName": matchedZone.aliyun_domain_name,
+              "PageNumber": pageNumber,
+              "PageSize": pageSize
+            };
+
+            console.log(`[阿里云API调试] 获取第 ${pageNumber} 页记录...`);
+            const result = await client.request('DescribeDomainRecords', params, requestOption);
+            
+            totalCount = result.TotalCount || 0;
+            const currentPageRecords = result.DomainRecords?.Record || [];
+            
+            console.log(`[阿里云API调试] 第 ${pageNumber} 页结果:`, {
+              RequestId: result.RequestId,
+              TotalCount: totalCount,
+              RecordCount: currentPageRecords.length,
+              PageNumber: result.PageNumber,
+              PageSize: result.PageSize
+            });
+
+            if (currentPageRecords.length > 0) {
+              allRecords.push(...currentPageRecords);
+            }
+
+            // 判断是否还有更多页
+            const currentPageCount = allRecords.length;
+            hasMore = currentPageCount < totalCount && currentPageRecords.length === pageSize;
+            
+            if (hasMore) {
+              pageNumber++;
+            } else {
+              break;
+            }
+          }
+
+          console.log(`[阿里云API调试] 总共获取到 ${allRecords.length} 条记录（总数: ${totalCount}）`);
+
+          if (allRecords.length > 0) {
+            records = allRecords.map((record: any) => ({
               id: record.RecordId,
               zone_name: matchedZone.domain_name,
               type: record.Type,
@@ -185,33 +220,70 @@ export async function POST(req: Request) {
       // 同步记录到数据库
       for (const record of records) {
         try {
-          const result = await createUserRecord(user.id, {
+          // 使用 upsert 操作：如果记录存在则更新，不存在则创建
+          // 处理日期字段：如果不存在则使用当前时间
+          const now = new Date().toISOString();
+          const recordData = {
             record_id: record.id,
             zone_id: matchedZone.dns_provider_type === 'aliyun' 
               ? matchedZone.aliyun_domain_name 
               : matchedZone.cf_zone_id,
-            zone_name: record.zone_name,
-            name: record.name,
+            zone_name: record.zone_name || matchedZone.domain_name,
+            name: record.name || "@",
             type: record.type,
-            content: record.content,
-            ttl: record.ttl,
+            content: record.content || "",
+            ttl: record.ttl || 1,
             priority: record.priority,
-            proxied: record.proxied,
-            proxiable: record.proxiable,
-            comment: record.comment,
-            tags: record.tags,
-            created_on: record.created_on,
-            modified_on: record.modified_on,
-            active: record.active
+            proxied: record.proxied || false,
+            proxiable: record.proxiable !== undefined ? record.proxiable : true,
+            comment: record.comment || "",
+            tags: record.tags || "",
+            created_on: record.created_on || now,
+            modified_on: record.modified_on || now,
+            active: record.active !== undefined ? record.active : 1
+          };
+
+          // 检查记录是否已存在
+          const existingRecord = await prisma.userRecord.findUnique({
+            where: { record_id: record.id }
           });
 
-          if (result.status === "success") {
+          if (existingRecord) {
+            // 记录已存在，更新它
+            await prisma.userRecord.update({
+              where: { record_id: record.id },
+              data: {
+                zone_id: recordData.zone_id,
+                zone_name: recordData.zone_name,
+                name: recordData.name,
+                type: recordData.type,
+                content: recordData.content,
+                ttl: recordData.ttl,
+                priority: recordData.priority,
+                proxied: recordData.proxied,
+                proxiable: recordData.proxiable,
+                comment: recordData.comment,
+                tags: recordData.tags,
+                modified_on: recordData.modified_on,
+                active: recordData.active
+              }
+            });
             totalSynced++;
+            console.log(`[同步记录] 更新记录: ${record.name}.${record.zone_name} (${record.type})`);
           } else {
-            totalSkipped++;
+            // 记录不存在，创建新记录
+            const result = await createUserRecord(user.id, recordData);
+            if (result.status === "success") {
+              totalSynced++;
+              console.log(`[同步记录] 创建记录: ${record.name}.${record.zone_name} (${record.type})`);
+            } else {
+              const errorMsg = result.message || (typeof result.status === 'string' ? result.status : 'Unknown error');
+              console.error(`[同步记录失败] ${record.name}.${record.zone_name} (${record.type}):`, errorMsg);
+              totalSkipped++;
+            }
           }
-        } catch (error) {
-          console.error(`[同步记录错误] ${matchedZone.domain_name}:`, error);
+        } catch (error: any) {
+          console.error(`[同步记录错误] ${matchedZone.domain_name} - ${record.name}:`, error?.message || error);
           totalSkipped++;
         }
       }

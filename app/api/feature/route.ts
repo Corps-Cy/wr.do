@@ -27,6 +27,20 @@ export async function GET() {
       suffixWhiteList: configs.email_registration_suffix_limit_white_list,
     });
   } catch (error) {
-    console.log("[Error]", error);
+    console.error("[Error] /api/feature:", error);
+    // 返回默认配置，避免应用崩溃
+    return Response.json(
+      {
+        google: false,
+        github: false,
+        linuxdo: false,
+        resend: false,
+        credentials: true,
+        registration: true,
+        enableSuffixLimit: false,
+        suffixWhiteList: [],
+      },
+      { status: 200 }
+    );
   }
 }
