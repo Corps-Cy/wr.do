@@ -12,23 +12,6 @@
   <img alt="GitHub repo size" src="https://img.shields.io/github/repo-size/Corps-Cy/wr.do?style=flat-square">
 </div>
 
-## Screenshots
-
-<table>
-  <tr>
-    <td><img src="https://wr.do/_static/images/light-preview.png" /></td>
-    <td><img src="https://wr.do/_static/images/example_02.png" /></td>
-  </tr>
-  <tr>
-    <td><img src="https://wr.do/_static/images/example_01.png" /></td>
-    <td><img src="https://wr.do/_static/images/realtime-globe.png" /></td>
-  </tr>
-  <tr>
-    <td><img src="https://wr.do/_static/images/example_03.png" /></td>
-    <td><img src="https://wr.do/_static/images/domains.png" /></td>
-  </tr>
-</table>
-
 ## Features
 
 - 🔗 **Short Link Service**:
