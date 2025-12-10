@@ -3,16 +3,13 @@
   <h1>WR.DO</h1>
   <p>All-in-one domain service platform with integrated short link services, temporary email, subdomain management, file storage, and open API</p>
   <p><a href="https://wr.do">Official Site</a><a href="https://wr.do/docs/developer">Docs</a> · <a href="https://wr.do/feedback">Feedback</a> · English | <a href="/README.md">简体中文</a></p>
-  <img alt="Vercel" src="https://img.shields.io/badge/vercel-online-55b467?labelColor=black&logo=vercel&style=flat-square">
-  <img alt="Release" src="https://img.shields.io/github/actions/workflow/status/oiov/wr.do/docker-build-push.yml?label=release&labelColor=black&logo=githubactions&logoColor=white&style=flat-square">
-  <img alt="Release" src="https://img.shields.io/github/release-date/oiov/wr.do?labelColor=black&style=flat-square">
-  <img alt="GitHub Release" src="https://img.shields.io/github/v/release/oiov/wr.do?style=flat-square&label=latest"><br>
-  <img src="https://img.shields.io/github/contributors/oiov/wr.do?color=c4f042&labelColor=black&style=flat-square" alt="contributors"/>
-  <img src="https://img.shields.io/github/stars/oiov/wr.do.svg?logo=github&style=flat-square" alt="star"/>
-  <img alt="GitHub forks" src="https://img.shields.io/github/forks/oiov/wr.do?style=flat-square">
-  <img alt="GitHub Issues or Pull Requests" src="https://img.shields.io/github/issues/oiov/wr.do?style=flat-square"> <br>
-  <img alt="GitHub Actions Workflow Status" src="https://img.shields.io/github/actions/workflow/status/oiov/wr.do/docker-build-push.yml?style=flat-square">
-	<img src="https://img.shields.io/github/license/oiov/wr.do?style=flat-square" alt="MIT"/>
+  <img alt="GitHub" src="https://img.shields.io/github/license/Corps-Cy/wr.do?style=flat-square" alt="MIT"/>
+  <img src="https://img.shields.io/github/stars/Corps-Cy/wr.do.svg?logo=github&style=flat-square" alt="star"/>
+  <img alt="GitHub forks" src="https://img.shields.io/github/forks/Corps-Cy/wr.do?style=flat-square">
+  <img src="https://img.shields.io/github/contributors/Corps-Cy/wr.do?color=c4f042&labelColor=black&style=flat-square" alt="contributors"/>
+  <img alt="GitHub Issues or Pull Requests" src="https://img.shields.io/github/issues/Corps-Cy/wr.do?style=flat-square"> <br>
+  <img alt="GitHub last commit" src="https://img.shields.io/github/last-commit/Corps-Cy/wr.do?style=flat-square">
+  <img alt="GitHub repo size" src="https://img.shields.io/github/repo-size/Corps-Cy/wr.do?style=flat-square">
 </div>
 
 ## Screenshots
@@ -54,10 +51,12 @@
   - API endpoints for inbox retrieval
 
 - 🌐 **Subdomain Management Service**:
-  - Manage DNS records across multiple Cloudflare accounts and domains
-  - Create various DNS record types (CNAME, A, TXT, etc.)
+  - Manage DNS records across multiple DNS providers (Cloudflare, Aliyun DNS, etc.)
+  - Create various DNS record types (CNAME, A, TXT, MX, AAAA, etc.)
+  - Support DNS provider switching and platform migration
   - Support enabling application mode (user submission, admin approval)
   - Support email notification of administrator and user domain application status
+  - Support batch DNS record synchronization
 
 - 💳 **Cloud Storage Service**
   - Connects to multiple channels (S3 API) cloud storage platforms (Cloudflare R2, AWS S3)
@@ -94,13 +93,13 @@ See step by step installation tutorial at [Quick Start for Developer](https://wr
 
 ### Deploy with Vercel
 
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/oiov/wr.do.git&project-name=wrdo)
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/Corps-Cy/wr.do.git&project-name=wrdo)
 
 Remember to fill in the necessary environment variables.
 
 ### Deploy with Docker Compose
 
-Create a new folder and copy the [`docker-compose.yml`](https://github.com/oiov/wr.do/blob/main/docker-compose.yml)、[`.env`](https://github.com/oiov/wr.do/blob/main/.env.example) file to the folder.
+Create a new folder and copy the [`docker-compose.yml`](https://github.com/Corps-Cy/wr.do/blob/main/docker-compose.yml)、[`.env`](https://github.com/Corps-Cy/wr.do/blob/main/.env.example) file to the folder.
 
 ```yml
 - wrdo
@@ -117,7 +116,7 @@ docker compose up -d
 ## Local development
 
 ```bash
-git clone https://github.com/oiov/wr.do
+git clone https://github.com/Corps-Cy/wr.do.git
 cd wr.do
 pnpm install
 ```
@@ -152,23 +151,26 @@ Via [Installation For Developer](https://wr.do/docs/developer).
 
 ## Technology Stack
 
-- Next.js + React + TypeScript
-- Tailwind CSS for styling and design
-- Prisma ORM as the database toolkit
-- Cloudflare as the primary cloud infrastructure
-- Vercel as the recommended deployment platform
-- Resend as the primary email service
+- **Frontend Framework**: Next.js 14 + React 18 + TypeScript
+- **Styling**: Tailwind CSS
+- **Database**: PostgreSQL + Prisma ORM
+- **DNS Services**: Cloudflare DNS, Aliyun DNS (multi-provider support)
+- **Cloud Infrastructure**: Cloudflare, Vercel
+- **Email Service**: Resend
+- **Internationalization**: Next-Intl
 
-## Fork Repository Sync
+## About This Project
 
-This project is configured with a sync workflow for the upstream repository [oiov/wr.do](https://github.com/oiov/wr.do), featuring:
+This project is based on [oiov/wr.do](https://github.com/oiov/wr.do) with customizations and improvements, including:
 
-- 🔄 **Manual Sync Trigger** - Auto-sync disabled by default, full control over sync timing
-- 💬 **Auto Comment After Sync** - Add detailed sync information to related commits
-- 🚨 **Smart Error Handling** - Auto-create detailed Issues when sync fails
-- 🧹 **Auto Cleanup Notifications** - Automatically close previous sync failure Issues
+- ✅ **Multi DNS Provider Support** - Support for Cloudflare and Aliyun DNS with flexible switching
+- ✅ **DNS Record Sync Optimization** - Support for paginated fetching and batch synchronization
+- ✅ **Database Migration Fixes** - Fixed database migration issues for multi-platform support
+- ✅ **Improved Error Handling** - Optimized API error handling and logging output
 
-See [How to Trigger Sync](https://wr.do/docs/developer/sync) for details.
+## Upstream Project
+
+This project is forked from [oiov/wr.do](https://github.com/oiov/wr.do). Thanks to the original author for the excellent work.
 
 ## Community Group
 
@@ -179,17 +181,17 @@ See [How to Trigger Sync](https://wr.do/docs/developer/sync) for details.
 
 ## Contributors
 
-<a href="https://github.com/oiov/wr.do/graphs/contributors">
-  <img src="https://contrib.rocks/image?repo=oiov/wr.do" />
+<a href="https://github.com/Corps-Cy/wr.do/graphs/contributors">
+  <img src="https://contrib.rocks/image?repo=Corps-Cy/wr.do" />
 </a>
 
 ## Star History
 
-<a href="https://star-history.com/#oiov/wr.do&Date">
+<a href="https://star-history.com/#Corps-Cy/wr.do&Date">
  <picture>
-   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=oiov/wr.do&type=Date&theme=dark" />
-   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/svg?repos=oiov/wr.do&type=Date" />
-   <img alt="Star History Chart" src="https://api.star-history.com/svg?repos=oiov/wr.do&type=Date" />
+   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=Corps-Cy/wr.do&type=Date&theme=dark" />
+   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/svg?repos=Corps-Cy/wr.do&type=Date" />
+   <img alt="Star History Chart" src="https://api.star-history.com/svg?repos=Corps-Cy/wr.do&type=Date" />
  </picture>
 </a>
 

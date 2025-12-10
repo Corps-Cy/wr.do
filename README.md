@@ -5,16 +5,13 @@
   <p>
     <a href="https://wr.do">官网</a> · <a href="https://wr.do/docs/developer">部署文档</a> · <a href="https://wr.do/feedback">反馈讨论</a> · <a href="/README-en.md">English</a> | 简体中文
   </p>
-  <img alt="Vercel" src="https://img.shields.io/badge/vercel-online-55b467?labelColor=black&logo=vercel&style=flat-square">
-  <img alt="Release" src="https://img.shields.io/github/actions/workflow/status/oiov/wr.do/docker-build-push.yml?label=release&labelColor=black&logo=githubactions&logoColor=white&style=flat-square">
-  <img alt="Release" src="https://img.shields.io/github/release-date/oiov/wr.do?labelColor=black&style=flat-square">
-  <img alt="GitHub Release" src="https://img.shields.io/github/v/release/oiov/wr.do?style=flat-square&label=latest"><br>
-  <img src="https://img.shields.io/github/contributors/oiov/wr.do?color=c4f042&labelColor=black&style=flat-square" alt="contributors"/>
-  <img src="https://img.shields.io/github/stars/oiov/wr.do.svg?logo=github&style=flat-square" alt="star"/>
-  <img alt="GitHub forks" src="https://img.shields.io/github/forks/oiov/wr.do?style=flat-square">
-  <img alt="GitHub Issues or Pull Requests" src="https://img.shields.io/github/issues/oiov/wr.do?style=flat-square"> <br>
-  <img alt="GitHub Actions Workflow Status" src="https://img.shields.io/github/actions/workflow/status/oiov/wr.do/docker-build-push.yml?style=flat-square">
-	<img src="https://img.shields.io/github/license/oiov/wr.do?style=flat-square" alt="MIT"/>
+  <img alt="GitHub" src="https://img.shields.io/github/license/Corps-Cy/wr.do?style=flat-square" alt="MIT"/>
+  <img src="https://img.shields.io/github/stars/Corps-Cy/wr.do.svg?logo=github&style=flat-square" alt="star"/>
+  <img alt="GitHub forks" src="https://img.shields.io/github/forks/Corps-Cy/wr.do?style=flat-square">
+  <img src="https://img.shields.io/github/contributors/Corps-Cy/wr.do?color=c4f042&labelColor=black&style=flat-square" alt="contributors"/>
+  <img alt="GitHub Issues or Pull Requests" src="https://img.shields.io/github/issues/Corps-Cy/wr.do?style=flat-square"> <br>
+  <img alt="GitHub last commit" src="https://img.shields.io/github/last-commit/Corps-Cy/wr.do?style=flat-square">
+  <img alt="GitHub repo size" src="https://img.shields.io/github/repo-size/Corps-Cy/wr.do?style=flat-square">
 </div>
 
 ## 截图预览
@@ -67,10 +64,12 @@
 <details>
 <summary><strong>🌐 子域名管理服务</strong> - <a href="javascript:;">[功能列表]</a></summary>
 <ul>
-<li>支持管理多 Cloudflare 账户下的多个域名的 DNS 记录</li>
-<li>支持创建多种 DNS 记录类型（CNAME、A、TXT 等）</li>
+<li>支持管理多 DNS 提供商（Cloudflare、阿里云 DNS 等）的多个域名</li>
+<li>支持创建多种 DNS 记录类型（CNAME、A、TXT、MX、AAAA 等）</li>
+<li>支持 DNS 提供商切换和平台迁移</li>
 <li>支持开启申请模式（用户提交、管理员审批）</li>
 <li>支持邮件通知管理员、用户域名申请状态</li>
+<li>支持批量同步 DNS 记录</li>
 </ul>
 </details>
 
@@ -113,13 +112,13 @@
 
 ## 技术栈
 
-- Next.js + React + TypeScript
-- Tailwind CSS 用于样式设计
-- Prisma ORM 作为数据库工具
-- Cloudflare 作为主要的云基础设施
-- Vercel 作为推荐的部署平台
-- Resend 作为邮件服务
-- Next-Intl 作为国际化支持
+- **前端框架**: Next.js 14 + React 18 + TypeScript
+- **样式设计**: Tailwind CSS
+- **数据库**: PostgreSQL + Prisma ORM
+- **DNS 服务**: Cloudflare DNS、阿里云 DNS（支持多平台）
+- **云基础设施**: Cloudflare、Vercel
+- **邮件服务**: Resend
+- **国际化**: Next-Intl
 
 ## 快速开始
 
@@ -131,13 +130,13 @@
 
 ### 使用 Vercel 部署
 
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/oiov/wr.do.git&project-name=wrdo)
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/Corps-Cy/wr.do.git&project-name=wrdo)
 
 记得填写必要的环境变量。
 
 ### 使用 Docker Compose 部署
 
-在服务器中创建一个文件夹，进入该文件夹并新建 [docker-compose.yml](https://github.com/oiov/wr.do/blob/main/docker-compose.yml)、[.env](https://github.com/oiov/wr.do/blob/main/.env.example) 文件：
+在服务器中创建一个文件夹，进入该文件夹并新建 [docker-compose.yml](https://github.com/Corps-Cy/wr.do/blob/main/docker-compose.yml)、[.env](https://github.com/Corps-Cy/wr.do/blob/main/.env.example) 文件：
 
 ```yml
 - wrdo
@@ -164,7 +163,7 @@ docker compose up -d
 将 `.env.example` 复制为 `.env` 并填写必要的环境变量。
 
 ```bash
-git clone https://github.com/oiov/wr.do
+git clone https://github.com/Corps-Cy/wr.do.git
 cd wr.do
 pnpm install
 ```
@@ -196,16 +195,18 @@ pnpm dev
 
 查看 [开发者文档](https://wr.do/docs/developer).
 
-## Fork 仓库同步
+## 关于本项目
 
-本项目配置了与上游仓库 [oiov/wr.do](https://github.com/oiov/wr.do) 的同步工作流，支持：
+本项目基于 [oiov/wr.do](https://github.com/oiov/wr.do) 进行开发和定制，主要改进包括：
 
-- 🔄 **手动触发同步** - 默认关闭自动同步，完全控制同步时机
-- 💬 **同步后自动评论** - 在相关 commit 上添加详细的同步信息
-- 🚨 **智能错误处理** - 同步失败时自动创建详细的 Issue
-- 🧹 **自动清理通知** - 自动关闭之前的同步失败 Issue
+- ✅ **多 DNS 提供商支持** - 支持 Cloudflare 和阿里云 DNS，可灵活切换
+- ✅ **DNS 记录同步优化** - 支持分页获取和批量同步
+- ✅ **数据库迁移修复** - 修复了多平台支持的数据库迁移问题
+- ✅ **错误处理改进** - 优化了 API 错误处理和日志输出
 
-前往[如何手动触发同步](https://wr.do/docs/developer/sync)查看详细文档。
+## 上游项目
+
+本项目 Fork 自 [oiov/wr.do](https://github.com/oiov/wr.do)，感谢原作者的优秀工作。
 
 ## 社区群组
 
@@ -216,17 +217,17 @@ pnpm dev
 
 ## 贡献者
 
-<a href="https://github.com/oiov/wr.do/graphs/contributors">
-  <img src="https://contrib.rocks/image?repo=oiov/wr.do" />
+<a href="https://github.com/Corps-Cy/wr.do/graphs/contributors">
+  <img src="https://contrib.rocks/image?repo=Corps-Cy/wr.do" />
 </a>
 
 ## Star History
 
-<a href="https://star-history.com/#oiov/wr.do&Date">
+<a href="https://star-history.com/#Corps-Cy/wr.do&Date">
  <picture>
-   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=oiov/wr.do&type=Date&theme=dark" />
-   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/svg?repos=oiov/wr.do&type=Date" />
-   <img alt="Star History Chart" src="https://api.star-history.com/svg?repos=oiov/wr.do&type=Date" />
+   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=Corps-Cy/wr.do&type=Date&theme=dark" />
+   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/svg?repos=Corps-Cy/wr.do&type=Date" />
+   <img alt="Star History Chart" src="https://api.star-history.com/svg?repos=Corps-Cy/wr.do&type=Date" />
  </picture>
 </a>
 
