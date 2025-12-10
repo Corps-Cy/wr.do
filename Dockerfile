@@ -2,8 +2,7 @@ FROM node:20-alpine AS base
 
 FROM base AS deps
 
-RUN apk add --no-cache openssl
-RUN apk add --no-cache libc6-compat
+RUN apk update && apk add --no-cache openssl libc6-compat
 
 WORKDIR /app
 
@@ -18,9 +17,8 @@ RUN pnpm i --frozen-lockfile
 FROM base AS builder
 WORKDIR /app
 
-RUN apk add --no-cache openssl
-
-RUN npm install -g pnpm
+RUN apk update && apk add --no-cache openssl && \
+    npm install -g pnpm
 
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
@@ -31,9 +29,8 @@ FROM base AS runner
 
 WORKDIR /app
 
-RUN apk add --no-cache openssl
-
-RUN npm install -g pnpm
+RUN apk update && apk add --no-cache openssl && \
+    npm install -g pnpm
 
 ENV NODE_ENV=production
 ENV IS_DOCKER=true
