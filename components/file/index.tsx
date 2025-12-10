@@ -372,7 +372,7 @@ export default function UserFileManager({ user, action }: FileListProps) {
               </SelectTrigger>
               <SelectContent>
                 {s3Configs.map((provider, index) => (
-                  <SelectGroup>
+                  <SelectGroup key={`${provider.provider_name}-${index}`}>
                     <SelectLabel>{provider.provider_name}</SelectLabel>
                     {provider.buckets?.map((item) => (
                       <SelectItem

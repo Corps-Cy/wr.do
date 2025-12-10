@@ -451,6 +451,12 @@ export default function UserUrlsList({ user, action }: UrlListProps) {
           rendeEmpty()
         )}
       </TableBody>
+    </Table>
+  );
+
+  const rendeListWithPagination = () => (
+    <>
+      {rendeList()}
       {data && Math.ceil(data.total / pageSize) > 1 && (
         <PaginationWrapper
           layout={isMobile ? "right" : "split"}
@@ -461,7 +467,7 @@ export default function UserUrlsList({ user, action }: UrlListProps) {
           setPageSize={setPageSize}
         />
       )}
-    </Table>
+    </>
   );
 
   const rendeGrid = () => (
@@ -731,7 +737,7 @@ export default function UserUrlsList({ user, action }: UrlListProps) {
         <TabsContent className="space-y-3" value="List">
           {pathname !== "/dashboard" && <UrlStatus action={action} />}
           {rendeSeachInputs()}
-          {rendeList()}
+          {rendeListWithPagination()}
           {rendLogs()}
         </TabsContent>
         <TabsContent className="space-y-3" value="Grid">

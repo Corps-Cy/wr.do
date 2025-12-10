@@ -296,17 +296,17 @@ export default function UsersList({ user }: UrlListProps) {
                 </EmptyPlaceholder>
               )}
             </TableBody>
-            {data && Math.ceil(data.total / pageSize) > 1 && (
-              <PaginationWrapper
-                layout={isMobile ? "right" : "split"}
-                total={data.total}
-                currentPage={currentPage}
-                setCurrentPage={setCurrentPage}
-                pageSize={pageSize}
-                setPageSize={setPageSize}
-              />
-            )}
           </Table>
+          {data && Math.ceil(data.total / pageSize) > 1 && (
+            <PaginationWrapper
+              layout={isMobile ? "right" : "split"}
+              total={data.total}
+              currentPage={currentPage}
+              setCurrentPage={setCurrentPage}
+              pageSize={pageSize}
+              setPageSize={setPageSize}
+            />
+          )}
         </CardContent>
       </Card>
 

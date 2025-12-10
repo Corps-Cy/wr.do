@@ -6,7 +6,8 @@ import { Drawer } from "vaul";
 
 import { cn } from "@/lib/utils";
 import { useMediaQuery } from "@/hooks/use-media-query";
-import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
 
 interface ModalProps {
   children: React.ReactNode;
@@ -108,6 +109,12 @@ export function Modal({
         )}
         style={{ maxHeight }}
       >
+        <VisuallyHidden asChild>
+          <DialogTitle>Modal</DialogTitle>
+        </VisuallyHidden>
+        <VisuallyHidden asChild>
+          <DialogDescription>Modal content</DialogDescription>
+        </VisuallyHidden>
         <div
           className={cn(
             "flex-1 overflow-y-auto overscroll-contain",

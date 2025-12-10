@@ -1,30 +1,27 @@
 services:
   app:
-    image: ghcr.io/oiov/wr.do/wrdo:${TAG:-latest}
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: wrdo-app:local
     container_name: wrdo
-    ports:
-      - "3000:3000"
+    env_file:
+      - .env
     environment:
       NODE_ENV: production
+      HOSTNAME: 0.0.0.0
+      PORT: ${PORT:-3000}
+      IS_DOCKER: "true"
       DATABASE_URL: postgres://postgres:postgres@postgres:5432/wrdo
       AUTH_SECRET: ${AUTH_SECRET:-your-auth-secret}
-      NEXT_PUBLIC_APP_URL: ${NEXT_PUBLIC_APP_URL}
-      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID}
-      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET}
-      GITHUB_ID: ${GITHUB_ID}
-      GITHUB_SECRET: ${GITHUB_SECRET}
-      LinuxDo_CLIENT_ID: ${LinuxDo_CLIENT_ID}
-      LinuxDo_CLIENT_SECRET: ${LinuxDo_CLIENT_SECRET}
-      RESEND_API_KEY: ${RESEND_API_KEY}
-      RESEND_FROM_EMAIL: ${RESEND_FROM_EMAIL}
-      NEXT_PUBLIC_EMAIL_R2_DOMAIN: ${NEXT_PUBLIC_EMAIL_R2_DOMAIN}
-      NEXT_PUBLIC_GOOGLE_ID: ${NEXT_PUBLIC_GOOGLE_ID}
-      SCREENSHOTONE_BASE_URL: ${SCREENSHOTONE_BASE_URL}
-      GITHUB_TOKEN: ${GITHUB_TOKEN}
-      SKIP_DB_CHECK: ${SKIP_DB_CHECK}
-      SKIP_DB_MIGRATION: ${SKIP_DB_MIGRATION}
+      NEXT_PUBLIC_APP_URL: ${NEXT_PUBLIC_APP_URL:-http://localhost:3000}
+      SKIP_DB_CHECK: ${SKIP_DB_CHECK:-false}
+      SKIP_DB_MIGRATION: ${SKIP_DB_MIGRATION:-false}
+    ports:
+      - "${PORT:-3000}:3000"
     depends_on:
-      - postgres
+      postgres:
+        condition: service_healthy
     networks:
       - wrdo-network
     restart: unless-stopped
@@ -36,6 +33,11 @@ services:
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=postgres
       - POSTGRES_DB=wrdo
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
     volumes:
       - postgres-data:/var/lib/postgresql/data
     ports:
