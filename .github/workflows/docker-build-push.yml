@@ -9,6 +9,8 @@ on:
 jobs:
   build-and-push:
     runs-on: ubuntu-latest
+    env:
+      IMAGE_NAME: ghcr.io/corps-cy/wr.do/wrdo:latest
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
@@ -23,18 +25,14 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Set lowercase repository name
-        id: repo
-        run: echo "name=$(echo ${{ github.repository }} | tr '[:upper:]' '[:lower:]')" >> $GITHUB_OUTPUT
-
       - name: Build and push Docker image
         uses: docker/build-push-action@v5
         with:
           push: ${{ github.event_name != 'pull_request' }}
           platforms: linux/amd64
-          tags: ghcr.io/${{ steps.repo.outputs.name }}/wrdo:latest
-          cache-from: type=registry,ref=ghcr.io/${{ steps.repo.outputs.name }}/wrdo:latest
-          cache-to: type=registry,ref=ghcr.io/${{ steps.repo.outputs.name }}/wrdo:latest,mode=max
+          tags: ${{ env.IMAGE_NAME }}
+          cache-from: type=registry,ref=${{ env.IMAGE_NAME }}
+          cache-to: type=registry,ref=${{ env.IMAGE_NAME }},mode=max
 
       - name: Post Build steps (optional)
         run: echo "Build finished"
