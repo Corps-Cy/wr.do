@@ -1,7 +1,31 @@
 # .dockerignore
-# node_modules
-# npm-debug.log
-# README.md
-# .env*
-# .next
-# .git
+node_modules
+npm-debug.log
+README*.md
+.env*
+.next
+.git
+.github
+.vscode
+.idea
+*.log
+*.md
+.DS_Store
+coverage
+.nyc_output
+*.test.ts
+*.test.tsx
+*.spec.ts
+*.spec.tsx
+__tests__
+test
+tests
+docs
+content/docs
+*.map
+.cache
+dist
+build
+*.swp
+*.swo
+*~

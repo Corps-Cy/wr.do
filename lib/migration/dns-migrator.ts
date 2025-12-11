@@ -3,7 +3,7 @@
 import { DNSManager } from '../dns/manager';
 import { DNSConfig, DNSProvider, DNSRecord, DNSError } from '../dns/types';
 import { getDomainsByFeature } from '../dto/domains';
-import { db } from '../db';
+import { prisma } from '../db';
 
 export interface MigrationOptions {
   dryRun?: boolean; // 是否只是预览，不实际执行
@@ -64,7 +64,7 @@ export class DNSMigrator {
       this.dnsManager.registerProvider(targetProviderKey, targetConfig);
 
       // 注册源提供商
-      const sourceProviderKey = `source_${domain.dns_provider || 'cloudflare'}_${domainId}`;
+      const sourceProviderKey = `source_${domain.dns_provider_type || 'cloudflare'}_${domainId}`;
       const sourceConfig = this.buildSourceConfig(domain);
       this.dnsManager.registerProvider(sourceProviderKey, sourceConfig);
 
@@ -332,7 +332,7 @@ export class DNSMigrator {
    * 获取域名信息
    */
   private async getDomainById(domainId: string) {
-    return await db.domain.findUnique({
+    return await prisma.domain.findUnique({
       where: { id: domainId }
     });
   }
@@ -356,7 +356,7 @@ export class DNSMigrator {
    */
   private buildSourceConfig(domain: any): DNSConfig {
     return {
-      provider: domain.dns_provider || 'cloudflare',
+      provider: domain.dns_provider_type || 'cloudflare',
       cf_zone_id: domain.cf_zone_id,
       cf_api_key: domain.cf_api_key,
       cf_email: domain.cf_email,
@@ -433,7 +433,7 @@ export class DNSMigrator {
       updateData.aliyun_domain_name = config.aliyun_domain_name;
     }
 
-    await db.domain.update({
+    await prisma.domain.update({
       where: { id: domainId },
       data: updateData
     });

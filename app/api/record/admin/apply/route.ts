@@ -74,7 +74,7 @@ export async function POST(req: Request) {
         }, providerKey);
         
         if (!aliyunRecord.success) {
-          return Response.json(aliyunRecord.error?.message || "阿里云 DNS 记录创建失败", {
+          return Response.json(aliyunRecord.errors?.[0]?.message || "阿里云 DNS 记录创建失败", {
             status: 503,
           });
         }
@@ -82,13 +82,13 @@ export async function POST(req: Request) {
         data = {
           success: true,
           result: {
-            id: aliyunRecord.data?.id || record.id,
-            name: aliyunRecord.data?.name || record_name,
-            type: aliyunRecord.data?.type || record.type,
-            content: aliyunRecord.data?.content || record.content,
+            id: aliyunRecord.result?.id || record.id,
+            name: aliyunRecord.result?.name || record_name,
+            type: aliyunRecord.result?.type || record.type,
+            content: aliyunRecord.result?.content || record.content,
             proxied: false, // 阿里云不支持代理
             proxiable: false,
-            ttl: aliyunRecord.data?.ttl || record.ttl || 600,
+            ttl: aliyunRecord.result?.ttl || record.ttl || 600,
             comment: record.comment || "",
             tags: [],
             created_on: new Date().toISOString(),

@@ -5,7 +5,7 @@ import { dnsManager } from '@/lib/dns/manager';
 import { getDomainsByFeature } from '@/lib/dto/domains';
 import { getCurrentUser } from '@/lib/session';
 import { checkUserStatus } from '@/lib/dto/user';
-import { CreateDNSRecord, UpdateDNSRecord, DNSFilters } from '@/lib/dns/types';
+import { CreateDNSRecord, UpdateDNSRecord, DNSFilters, DNSConfig, DNSProvider } from '@/lib/dns/types';
 
 export async function POST(req: NextRequest) {
   try {
@@ -28,15 +28,15 @@ export async function POST(req: NextRequest) {
     }
 
     // 构建 DNS 配置
-    const dnsConfig = {
-      provider: domain.dns_provider || 'cloudflare',
-      cf_zone_id: domain.cf_zone_id,
-      cf_api_key: domain.cf_api_key,
-      cf_email: domain.cf_email,
-      aliyun_access_key_id: domain.aliyun_access_key_id,
-      aliyun_access_key_secret: domain.aliyun_access_key_secret,
-      aliyun_region: domain.aliyun_region,
-      aliyun_domain_name: domain.aliyun_domain_name
+    const dnsConfig: DNSConfig = {
+      provider: (domain.dns_provider_type as DNSProvider) || 'cloudflare',
+      cf_zone_id: domain.cf_zone_id ?? undefined,
+      cf_api_key: domain.cf_api_key ?? undefined,
+      cf_email: domain.cf_email ?? undefined,
+      aliyun_access_key_id: domain.aliyun_access_key_id ?? undefined,
+      aliyun_access_key_secret: domain.aliyun_access_key_secret ?? undefined,
+      aliyun_region: domain.aliyun_region ?? undefined,
+      aliyun_domain_name: domain.aliyun_domain_name ?? undefined
     };
 
     // 注册提供商
@@ -88,15 +88,15 @@ export async function PUT(req: NextRequest) {
     }
 
     // 构建 DNS 配置
-    const dnsConfig = {
-      provider: domain.dns_provider || 'cloudflare',
-      cf_zone_id: domain.cf_zone_id,
-      cf_api_key: domain.cf_api_key,
-      cf_email: domain.cf_email,
-      aliyun_access_key_id: domain.aliyun_access_key_id,
-      aliyun_access_key_secret: domain.aliyun_access_key_secret,
-      aliyun_region: domain.aliyun_region,
-      aliyun_domain_name: domain.aliyun_domain_name
+    const dnsConfig: DNSConfig = {
+      provider: (domain.dns_provider_type as DNSProvider) || 'cloudflare',
+      cf_zone_id: domain.cf_zone_id ?? undefined,
+      cf_api_key: domain.cf_api_key ?? undefined,
+      cf_email: domain.cf_email ?? undefined,
+      aliyun_access_key_id: domain.aliyun_access_key_id ?? undefined,
+      aliyun_access_key_secret: domain.aliyun_access_key_secret ?? undefined,
+      aliyun_region: domain.aliyun_region ?? undefined,
+      aliyun_domain_name: domain.aliyun_domain_name ?? undefined
     };
 
     // 注册提供商
@@ -153,15 +153,15 @@ export async function DELETE(req: NextRequest) {
     }
 
     // 构建 DNS 配置
-    const dnsConfig = {
-      provider: domain.dns_provider || 'cloudflare',
-      cf_zone_id: domain.cf_zone_id,
-      cf_api_key: domain.cf_api_key,
-      cf_email: domain.cf_email,
-      aliyun_access_key_id: domain.aliyun_access_key_id,
-      aliyun_access_key_secret: domain.aliyun_access_key_secret,
-      aliyun_region: domain.aliyun_region,
-      aliyun_domain_name: domain.aliyun_domain_name
+    const dnsConfig: DNSConfig = {
+      provider: (domain.dns_provider_type as DNSProvider) || 'cloudflare',
+      cf_zone_id: domain.cf_zone_id ?? undefined,
+      cf_api_key: domain.cf_api_key ?? undefined,
+      cf_email: domain.cf_email ?? undefined,
+      aliyun_access_key_id: domain.aliyun_access_key_id ?? undefined,
+      aliyun_access_key_secret: domain.aliyun_access_key_secret ?? undefined,
+      aliyun_region: domain.aliyun_region ?? undefined,
+      aliyun_domain_name: domain.aliyun_domain_name ?? undefined
     };
 
     // 注册提供商
@@ -206,15 +206,15 @@ export async function GET(req: NextRequest) {
     }
 
     // 构建 DNS 配置
-    const dnsConfig = {
-      provider: domain.dns_provider || 'cloudflare',
-      cf_zone_id: domain.cf_zone_id,
-      cf_api_key: domain.cf_api_key,
-      cf_email: domain.cf_email,
-      aliyun_access_key_id: domain.aliyun_access_key_id,
-      aliyun_access_key_secret: domain.aliyun_access_key_secret,
-      aliyun_region: domain.aliyun_region,
-      aliyun_domain_name: domain.aliyun_domain_name
+    const dnsConfig: DNSConfig = {
+      provider: (domain.dns_provider_type as DNSProvider) || 'cloudflare',
+      cf_zone_id: domain.cf_zone_id ?? undefined,
+      cf_api_key: domain.cf_api_key ?? undefined,
+      cf_email: domain.cf_email ?? undefined,
+      aliyun_access_key_id: domain.aliyun_access_key_id ?? undefined,
+      aliyun_access_key_secret: domain.aliyun_access_key_secret ?? undefined,
+      aliyun_region: domain.aliyun_region ?? undefined,
+      aliyun_domain_name: domain.aliyun_domain_name ?? undefined
     };
 
     // 注册提供商
@@ -241,10 +241,14 @@ export async function GET(req: NextRequest) {
       const filters: DNSFilters = {};
       
       if (searchParams.get('type')) filters.type = searchParams.get('type') as any;
-      if (searchParams.get('name')) filters.name = searchParams.get('name');
-      if (searchParams.get('content')) filters.content = searchParams.get('content');
-      if (searchParams.get('page')) filters.page = parseInt(searchParams.get('page')!);
-      if (searchParams.get('per_page')) filters.per_page = parseInt(searchParams.get('per_page')!);
+      const nameParam = searchParams.get('name');
+      if (nameParam !== null) filters.name = nameParam;
+      const contentParam = searchParams.get('content');
+      if (contentParam !== null) filters.content = contentParam;
+      const pageParam = searchParams.get('page');
+      if (pageParam) filters.page = parseInt(pageParam);
+      const perPageParam = searchParams.get('per_page');
+      if (perPageParam) filters.per_page = parseInt(perPageParam);
 
       const result = await dnsManager.getDNSRecords(filters, providerKey);
 

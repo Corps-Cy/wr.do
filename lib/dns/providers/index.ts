@@ -112,7 +112,7 @@ export class DNSProviderManager {
   validateAllProviders(): { [key: string]: { valid: boolean; errors: string[] } } {
     const results: { [key: string]: { valid: boolean; errors: string[] } } = {};
     
-    for (const [key, provider] of this.providers) {
+    for (const [key, provider] of Array.from(this.providers)) {
       try {
         // 这里可以添加实际的验证逻辑
         results[key] = { valid: true, errors: [] };

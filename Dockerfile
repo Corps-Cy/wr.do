@@ -2,56 +2,59 @@ FROM node:20-alpine AS base
 
 FROM base AS deps
 
-RUN apk update && apk add --no-cache openssl libc6-compat
+RUN apk update && apk add --no-cache openssl libc6-compat && \
+    npm install -g pnpm && \
+    rm -rf /var/cache/apk/* /tmp/*
 
 WORKDIR /app
 
-RUN npm install -g pnpm
+ENV CI=true
 
 COPY . .
 
-# RUN pnpm config set registry https://registry.npmmirror.com
-
-RUN pnpm i --frozen-lockfile
+RUN pnpm i --frozen-lockfile && \
+    pnpm store prune
 
 FROM base AS builder
 WORKDIR /app
 
 RUN apk update && apk add --no-cache openssl && \
-    npm install -g pnpm
+    npm install -g pnpm && \
+    rm -rf /var/cache/apk/* /tmp/*
 
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
-RUN pnpm run build
+RUN pnpm run build && \
+    rm -rf node_modules/.cache .next/cache
 
 FROM base AS runner
 
 WORKDIR /app
 
-RUN apk update && apk add --no-cache openssl && \
-    npm install -g pnpm
-
 ENV NODE_ENV=production
 ENV IS_DOCKER=true
+ENV HOSTNAME=0.0.0.0
+ENV PORT=3000
 
-RUN pnpm add npm-run-all dotenv prisma@5.17.0 @prisma/client@5.17.0
+# 只安装运行时必需的包，合并命令减少层数并清理缓存
+RUN apk update && apk add --no-cache openssl && \
+    npm install -g --production npm-run-all dotenv prisma@5.17.0 @prisma/client@5.17.0 && \
+    npm cache clean --force && \
+    rm -rf /var/cache/apk/* /tmp/*
 
 COPY --from=builder /app/public ./public
 COPY --from=builder /app/prisma ./prisma
 
 # Automatically leverage output traces to reduce image size
 # https://nextjs.org/docs/advanced-features/output-file-tracing
-COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
-COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
+COPY --from=builder --chown=node:node /app/.next/standalone ./
+COPY --from=builder --chown=node:node /app/.next/static ./.next/static
 
 # Check db
 COPY scripts/check-db.js /app/scripts/check-db.js
 
 EXPOSE 3000
 
-ENV HOSTNAME=0.0.0.0
-ENV PORT=3000
-
-# CMD ["node", "server.js"]
-CMD ["pnpm", "start-docker"]
+# 使用 npm-run-all 来运行数据库检查和启动服务器
+CMD ["npm-run-all", "check-db", "start-server"]

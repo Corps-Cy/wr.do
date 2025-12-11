@@ -13,7 +13,7 @@
 import { DNSMigrator } from '../lib/migration/dns-migrator';
 import { DNSProvider } from '../lib/dns/types';
 import { getDomainsByFeature } from '../lib/dto/domains';
-import { db } from '../lib/db';
+import { prisma } from '../lib/db';
 
 interface MigrationCLIOptions {
   dryRun: boolean;
@@ -76,7 +76,7 @@ async function main() {
       // 迁移单个域名
       console.log(`🎯 迁移域名: ${options.domain}`);
       
-      const domain = await db.domain.findFirst({
+      const domain = await prisma.domain.findFirst({
         where: { domain_name: options.domain }
       });
 
@@ -117,7 +117,7 @@ async function main() {
     console.error('❌ 迁移失败:', error);
     process.exit(1);
   } finally {
-    await db.$disconnect();
+    await prisma.$disconnect();
   }
 }
 

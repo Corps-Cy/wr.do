@@ -1,6 +1,7 @@
 // DNS 管理器 - 统一 DNS 操作接口
 
 import { createDNSProvider, DNSProviderManager } from './providers';
+import { BaseDNSProvider } from './providers/base';
 import {
   DNSConfig,
   CreateDNSRecord,
@@ -252,7 +253,7 @@ export class DNSManager {
     const providers = this.providerManager.getAllProviders();
     const result: Array<{ key: string; provider: string; config: any }> = [];
 
-    for (const [key, provider] of providers) {
+    for (const [key, provider] of Array.from(providers)) {
       result.push({
         key,
         provider: provider.getProviderName(),
@@ -270,7 +271,7 @@ export class DNSManager {
     const providers = this.providerManager.getAllProviders();
     const results: { [key: string]: { valid: boolean; message?: string } } = {};
 
-    for (const [key, provider] of providers) {
+    for (const [key, provider] of Array.from(providers)) {
       try {
         const isValid = await provider.validateDomain();
         results[key] = { valid: isValid };

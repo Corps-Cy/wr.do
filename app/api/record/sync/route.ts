@@ -68,7 +68,7 @@ export async function POST(req: Request) {
         
         // 检查必要的配置
         if (!matchedZone.aliyun_access_key_id || !matchedZone.aliyun_access_key_secret || !matchedZone.aliyun_domain_name) {
-          const missingFields = [];
+          const missingFields: string[] = [];
           if (!matchedZone.aliyun_access_key_id) missingFields.push('aliyun_access_key_id');
           if (!matchedZone.aliyun_access_key_secret) missingFields.push('aliyun_access_key_secret');
           if (!matchedZone.aliyun_domain_name) missingFields.push('aliyun_domain_name');
@@ -184,15 +184,15 @@ export async function POST(req: Request) {
             matchedZone.cf_email!,
           );
           
-          if (result && result.result) {
-            records = result.result.map(record => ({
+          if (result && result.length > 0) {
+            records = result.map(record => ({
               id: record.id,
               zone_name: matchedZone.domain_name,
               type: record.type,
               name: record.name,
               content: record.content,
               ttl: record.ttl,
-              priority: record.priority,
+              priority: (record as any).priority,
               proxied: record.proxied || false,
               proxiable: record.proxiable || false,
               comment: record.comment || "",
@@ -225,9 +225,9 @@ export async function POST(req: Request) {
           const now = new Date().toISOString();
           const recordData = {
             record_id: record.id,
-            zone_id: matchedZone.dns_provider_type === 'aliyun' 
+            zone_id: (matchedZone.dns_provider_type === 'aliyun' 
               ? matchedZone.aliyun_domain_name 
-              : matchedZone.cf_zone_id,
+              : matchedZone.cf_zone_id) || "",
             zone_name: record.zone_name || matchedZone.domain_name,
             name: record.name || "@",
             type: record.type,
@@ -253,19 +253,19 @@ export async function POST(req: Request) {
             await prisma.userRecord.update({
               where: { record_id: record.id },
               data: {
-                zone_id: recordData.zone_id,
-                zone_name: recordData.zone_name,
-                name: recordData.name,
-                type: recordData.type,
-                content: recordData.content,
-                ttl: recordData.ttl,
-                priority: recordData.priority,
-                proxied: recordData.proxied,
-                proxiable: recordData.proxiable,
-                comment: recordData.comment,
-                tags: recordData.tags,
-                modified_on: recordData.modified_on,
-                active: recordData.active
+                zone_id: recordData.zone_id ?? undefined,
+                zone_name: recordData.zone_name ?? undefined,
+                name: recordData.name ?? undefined,
+                type: recordData.type ?? undefined,
+                content: recordData.content ?? undefined,
+                ttl: recordData.ttl ?? undefined,
+                priority: recordData.priority ?? undefined,
+                proxied: recordData.proxied ?? undefined,
+                proxiable: recordData.proxiable ?? undefined,
+                comment: recordData.comment ?? undefined,
+                tags: recordData.tags ?? undefined,
+                modified_on: recordData.modified_on ?? undefined,
+                active: recordData.active ?? undefined
               }
             });
             totalSynced++;

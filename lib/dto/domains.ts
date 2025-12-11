@@ -78,6 +78,7 @@ export async function getDomainsByFeature(
     const domains = await prisma.domain.findMany({
       where: { [feature]: true },
       select: {
+        id: true,
         domain_name: true,
         dns_provider_type: true,
         cf_record_types: true,

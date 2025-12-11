@@ -390,7 +390,7 @@ export default function UserRecordsList({ user, action }: RecordListProps) {
     let successCount = 0;
     let failCount = 0;
 
-    for (const recordId of selectedRecords) {
+    for (const recordId of Array.from(selectedRecords)) {
       try {
         const record = filteredAndSortedRecords.find(r => r.record_id === recordId);
         if (record) {
@@ -419,7 +419,7 @@ export default function UserRecordsList({ user, action }: RecordListProps) {
     let successCount = 0;
     let failCount = 0;
 
-    for (const recordId of selectedRecords) {
+    for (const recordId of Array.from(selectedRecords)) {
       try {
         const record = filteredAndSortedRecords.find(r => r.record_id === recordId);
         if (record) {
@@ -454,7 +454,7 @@ export default function UserRecordsList({ user, action }: RecordListProps) {
   // 获取唯一域名列表用于过滤
   const uniqueDomains = useMemo(() => {
     if (!data?.list) return [];
-    const domains = [...new Set(data.list.map(record => record.zone_name))];
+    const domains = Array.from(new Set(data.list.map(record => record.zone_name)));
     return domains.sort();
   }, [data?.list]);
 
