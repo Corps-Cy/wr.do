@@ -54,11 +54,12 @@ COPY --from=builder --chown=node:node /app/.next/static ./.next/static
 # Check db - 复制脚本到 standalone 目录
 COPY scripts/check-db.js ./scripts/check-db.js
 
-# 在 standalone 目录中安装 check-db.js 需要的依赖
-# 使用 --legacy-peer-deps 避免依赖冲突
+# 从 builder 阶段复制 check-db.js 需要的依赖到 standalone 的 node_modules
+# 这样可以避免在 standalone 目录中运行 npm install 的问题
 WORKDIR /app
-RUN npm install --production --no-save --legacy-peer-deps dotenv chalk semver && \
-    npm cache clean --force
+COPY --from=builder /app/node_modules/dotenv ./node_modules/dotenv
+COPY --from=builder /app/node_modules/chalk ./node_modules/chalk
+COPY --from=builder /app/node_modules/semver ./node_modules/semver
 
 EXPOSE 3000
 

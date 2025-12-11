@@ -2,6 +2,9 @@ import { NextRequest, NextResponse } from "next/server";
 import { AliyunDNSProvider } from "@/lib/dns/providers/aliyun";
 import { DNSConfig } from "@/lib/dns/types";
 
+// 标记为动态路由，避免静态生成
+export const dynamic = 'force-dynamic';
+
 export async function GET(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url);
