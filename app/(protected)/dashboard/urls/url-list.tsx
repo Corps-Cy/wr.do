@@ -188,13 +188,17 @@ export default function UserUrlsList({ user, action }: UrlListProps) {
   };
 
   const rendeEmpty = () => (
-    <EmptyPlaceholder className="col-span-full shadow-none">
-      <EmptyPlaceholder.Icon name="link" />
-      <EmptyPlaceholder.Title>{t("No urls")}</EmptyPlaceholder.Title>
-      <EmptyPlaceholder.Description>
-        You don&apos;t have any url yet. Start creating url.
-      </EmptyPlaceholder.Description>
-    </EmptyPlaceholder>
+    <TableRow>
+      <TableCell colSpan={8}>
+        <EmptyPlaceholder className="col-span-full shadow-none">
+          <EmptyPlaceholder.Icon name="link" />
+          <EmptyPlaceholder.Title>{t("No urls")}</EmptyPlaceholder.Title>
+          <EmptyPlaceholder.Description>
+            You don&apos;t have any url yet. Start creating url.
+          </EmptyPlaceholder.Description>
+        </EmptyPlaceholder>
+      </TableCell>
+    </TableRow>
   );
 
   const rendeSeachInputs = () => (
@@ -340,8 +344,10 @@ export default function UserUrlsList({ user, action }: UrlListProps) {
           </>
         ) : data && data.list && data.list.length ? (
           data.list.map((short) => (
-            <div className="border-b" key={short.id}>
-              <TableRow className="grid grid-cols-3 items-center sm:grid-cols-11">
+            <TableRow
+              className="grid grid-cols-3 items-center border-b sm:grid-cols-11"
+              key={short.id}
+            >
                 <TableCell className="col-span-1 flex items-center gap-1 sm:col-span-2">
                   <Link
                     className="overflow-hidden text-ellipsis whitespace-normal text-slate-600 hover:text-blue-400 hover:underline dark:text-slate-400"
@@ -443,9 +449,7 @@ export default function UserUrlsList({ user, action }: UrlListProps) {
                     <Icons.lineChart className="mx-0.5 size-4" />
                   </Button>
                 </TableCell>
-              </TableRow>
-              {/* {rendeStats(short)} */}
-            </div>
+            </TableRow>
           ))
         ) : (
           rendeEmpty()

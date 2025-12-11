@@ -492,17 +492,19 @@ export default function UserRecordsList({ user, action }: RecordListProps) {
             </div>
           )}
           <div className="ml-auto flex items-center justify-end gap-3">
-            <Button
-              variant={"outline"}
-              onClick={handleSyncDNS}
-              disabled={isSyncing}
-              className="flex items-center gap-2"
-            >
-              <RefreshCw className={`h-4 w-4 ${isSyncing ? 'animate-spin' : ''}`} />
-              <span className="hidden sm:inline">
-                {isSyncing ? '同步中...' : '同步DNS'}
-              </span>
-            </Button>
+            {user.role === "ADMIN" && (
+              <Button
+                variant={"outline"}
+                onClick={handleSyncDNS}
+                disabled={isSyncing}
+                className="flex items-center gap-2"
+              >
+                <RefreshCw className={`h-4 w-4 ${isSyncing ? 'animate-spin' : ''}`} />
+                <span className="hidden sm:inline">
+                  {isSyncing ? '同步中...' : '同步DNS'}
+                </span>
+              </Button>
+            )}
             <Button
               variant={"outline"}
               onClick={() => handleRefresh()}
