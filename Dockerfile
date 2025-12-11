@@ -55,10 +55,9 @@ COPY --from=builder --chown=node:node /app/.next/static ./.next/static
 COPY scripts/check-db.js ./scripts/check-db.js
 
 # 从 builder 阶段复制 check-db.js 需要的依赖到 standalone 的 node_modules
-# 这样可以避免在 standalone 目录中运行 npm install 的问题
+# 注意：已移除 chalk 依赖，只保留 dotenv 和 semver
 WORKDIR /app
 COPY --from=builder /app/node_modules/dotenv ./node_modules/dotenv
-COPY --from=builder /app/node_modules/chalk ./node_modules/chalk
 COPY --from=builder /app/node_modules/semver ./node_modules/semver
 
 EXPOSE 3000

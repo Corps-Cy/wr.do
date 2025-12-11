@@ -1,7 +1,6 @@
 /* eslint-disable no-console */
 require("dotenv").config();
 const { PrismaClient } = require("@prisma/client");
-const chalk = require("chalk");
 const { execSync } = require("child_process");
 const semver = require("semver");
 
@@ -22,12 +21,13 @@ function getDatabaseType(url = process.env.DATABASE_URL) {
 
 const prisma = new PrismaClient();
 
+// 移除 chalk 依赖，使用简单的 console.log
 function success(msg) {
-  console.log(chalk.greenBright(`✓ ${msg}`));
+  console.log(`✓ ${msg}`);
 }
 
 function error(msg) {
-  console.log(chalk.redBright(`✗ ${msg}`));
+  console.log(`✗ ${msg}`);
 }
 
 async function checkEnv() {
