@@ -1,3 +1,4 @@
+
 services:
   app:
     image: ghcr.io/corps-cy/wr.do/wrdo:${TAG:-latest}

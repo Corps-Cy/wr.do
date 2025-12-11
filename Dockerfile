@@ -51,8 +51,13 @@ COPY --from=builder /app/prisma ./prisma
 COPY --from=builder --chown=node:node /app/.next/standalone ./
 COPY --from=builder --chown=node:node /app/.next/static ./.next/static
 
-# Check db
-COPY scripts/check-db.js /app/scripts/check-db.js
+# Check db - 复制脚本到 standalone 目录
+COPY scripts/check-db.js ./scripts/check-db.js
+
+# 在 standalone 目录中安装 check-db.js 需要的依赖
+WORKDIR /app
+RUN npm install --production --no-save dotenv chalk semver && \
+    npm cache clean --force
 
 EXPOSE 3000
 
