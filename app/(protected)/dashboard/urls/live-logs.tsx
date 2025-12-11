@@ -48,6 +48,17 @@ export interface LogEntry {
 }
 
 export default function LiveLog({ admin = false }: { admin?: boolean }) {
+  const formatDateUtc = (date: string | number | Date) =>
+    new Intl.DateTimeFormat("en-CA", {
+      timeZone: "UTC",
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+      hour: "2-digit",
+      minute: "2-digit",
+      second: "2-digit",
+    }).format(new Date(date));
+
   const { theme } = useTheme();
   const { mutate } = useSWRConfig();
   const [isLive, setIsLive] = useState(false);
@@ -252,7 +263,7 @@ export default function LiveLog({ admin = false }: { admin?: boolean }) {
                       className="grid grid-cols-5 font-mono text-xs hover:bg-gray-200 dark:border-gray-800 sm:grid-cols-9"
                     >
                       <TableCell className="col-span-2 truncate py-1.5">
-                        {new Date(log.updatedAt).toLocaleString()}
+                        {formatDateUtc(log.updatedAt)}
                       </TableCell>
                       <TableCell className="font-midium col-span-1 truncate py-1.5 text-green-700">
                         {log.slug}

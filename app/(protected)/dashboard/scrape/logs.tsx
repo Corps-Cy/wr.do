@@ -47,6 +47,17 @@ const getLogsUrl = (
 };
 
 const LogsTable = ({ userId, target }) => {
+  const formatDateUtc = (date: string | number | Date) =>
+    new Intl.DateTimeFormat("en-CA", {
+      timeZone: "UTC",
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+      hour: "2-digit",
+      minute: "2-digit",
+      second: "2-digit",
+    }).format(new Date(date));
+
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(20);
 
@@ -181,7 +192,7 @@ const LogsTable = ({ userId, target }) => {
                       key={log.id}
                     >
                       <TableCell className="hidden truncate p-2 sm:inline-block">
-                        {new Date(log.createdAt).toLocaleString()}
+                        {formatDateUtc(log.createdAt)}
                       </TableCell>
                       <TableCell className="p-2">{log.type}</TableCell>
                       <TableCell className="col-span-3 max-w-full truncate p-2">
